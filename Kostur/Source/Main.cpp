@@ -18,8 +18,8 @@ float acW = 1.2f;
 float acH = 0.35f;
 
 float lampSize = 0.07f;
-float lampX = acX + acW - lampSize - 0.03f;
-float lampY = acY + 0.03f; 
+float lampX = acX + acW - lampSize - 0.02f;
+float lampY = acY + 0.04f; 
 
 float screenW = 0.22f;
 float screenH = 0.10f;
@@ -152,6 +152,8 @@ int main(){
 
     initQuad();
     
+    unsigned int lampCircleTex = loadTexture("Resources/lamp.png");
+
 
     unsigned int fireTex = loadTexture("Resources/fire.png");
     unsigned int snowTex = loadTexture("Resources/snow.png");
@@ -176,12 +178,14 @@ int main(){
     double last = glfwGetTime();
     double target = 1.0/75.0;
 
+    float aspect = (float)SCREEN_HEIGHT / (float)SCREEN_WIDTH;
+
     while(!glfwWindowShouldClose(window)){
         double now = glfwGetTime();
         double dt = now-last;
         last = now;
 
-        glClearColor(0.15f,0.15f,0.15f,1.0f);
+        glClearColor(0.18f,0.22f,0.28f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         if(klimaOn){
@@ -217,10 +221,11 @@ int main(){
         //Klima
         drawQuad(acX, acY, acW, acH, whiteTex, 1, 1,1,1);
 
-        if(klimaOn)
-            drawQuad(lampX, lampY, lampSize, lampSize, whiteTex, 1, 1,0,0);
-        else
-            drawQuad(lampX, lampY, lampSize, lampSize, whiteTex, 1, 0.3f,0.3f,0.3f);
+        if (klimaOn) {
+            drawQuad(lampX, lampY, lampSize * aspect, lampSize, lampCircleTex, 1, 0.85f, 0.05f, 0.05f);
+        } else {
+            drawQuad(lampX, lampY, lampSize * aspect, lampSize, lampCircleTex, 1, 0.55f, 0.55f, 0.55f);
+        }
 
         float ventH = 0.05f * vent;
         drawQuad(acX, acY - ventH, acW, ventH, whiteTex, 1, 0.75f,0.75f,0.75f);
@@ -235,47 +240,42 @@ int main(){
         float s2X = s1X + screenW + 0.05f;
         float s3X = s2X + screenW + 0.05f;
 
-        //---------------------------------------------------------
-// Screens: black when OFF, light grey when ON
-//---------------------------------------------------------
 
-// OFF → all screens black (no numbers)
-if (!klimaOn) {
-    drawQuad(s1X, screenY, screenW, screenH, whiteTex, 1, 0.0f, 0.0f, 0.0f);
-    drawQuad(s2X, screenY, screenW, screenH, whiteTex, 1, 0.0f, 0.0f, 0.0f);
-    drawQuad(s3X, screenY, screenW, screenH, whiteTex, 1, 0.0f, 0.0f, 0.0f);
-}
+    if (!klimaOn) {
+        drawQuad(s1X, screenY, screenW, screenH, whiteTex, 1, 0.55f, 0.55f, 0.55f);
+        drawQuad(s2X, screenY, screenW, screenH, whiteTex, 1, 0.55f, 0.55f, 0.55f);
+        drawQuad(s3X, screenY, screenW, screenH, whiteTex, 1, 0.55f, 0.55f, 0.55f);
+    }
 
-// ON → light grey screens + numbers + icon
-else {
-    drawQuad(s1X, screenY, screenW, screenH, whiteTex, 1, 0.85f, 0.85f, 0.85f);
-    drawQuad(s2X, screenY, screenW, screenH, whiteTex, 1, 0.85f, 0.85f, 0.85f);
-    drawQuad(s3X, screenY, screenW, screenH, whiteTex, 1, 0.85f, 0.85f, 0.85f);
+    else {
+        drawQuad(s1X, screenY, screenW, screenH, whiteTex, 1, 0.85f, 0.85f, 0.85f);
+        drawQuad(s2X, screenY, screenW, screenH, whiteTex, 1, 0.85f, 0.85f, 0.85f);
+        drawQuad(s3X, screenY, screenW, screenH, whiteTex, 1, 0.85f, 0.85f, 0.85f);
 
-    float slotW = 0.07f;
-    float slotH = 0.07f;
+        float slotW = 0.07f;
+        float slotH = 0.07f;
 
-    float centerX1 = s1X + (screenW - (slotW*2 + 0.01f))/2;
-    float centerX2 = s2X + (screenW - (slotW*2 + 0.01f))/2;
-    float centerY  = screenY + (screenH - slotH)/2 - 0.003f;
+        float centerX1 = s1X + (screenW - (slotW*2 + 0.01f))/2;
+        float centerX2 = s2X + (screenW - (slotW*2 + 0.01f))/2;
+        float centerY  = screenY + (screenH - slotH)/2 - 0.003f;
 
-    drawTemperature(centerX1, centerY, slotW, slotH, (int)desiredTemp, digitTex, minusTex);
-    drawTemperature(centerX2, centerY, slotW, slotH, (int)measuredTemp, digitTex, minusTex);
+        drawTemperature(centerX1, centerY, slotW, slotH, (int)desiredTemp, digitTex, minusTex);
+        drawTemperature(centerX2, centerY, slotW, slotH, (int)measuredTemp, digitTex, minusTex);
 
-    // Icon
-    float iconSize = 0.10f;
-    float iconX = s3X + (screenW - iconSize)/2;
-    float iconY = screenY + (screenH - iconSize)/2;
+        // Icon
+        float iconSize = 0.10f;
+        float iconX = s3X + (screenW - iconSize)/2;
+        float iconY = screenY + (screenH - iconSize)/2;
 
-    float iconDiff = desiredTemp - measuredTemp;
+        float iconDiff = desiredTemp - measuredTemp;
 
-    if (std::fabs(iconDiff) < 0.5f)
-        drawQuad(iconX,iconY,iconSize,iconSize,okTex,1);
-    else if (iconDiff > 0)
-        drawQuad(iconX,iconY,iconSize,iconSize,fireTex,1);
-    else
-        drawQuad(iconX,iconY,iconSize,iconSize,snowTex,1);
-}
+        if (std::fabs(iconDiff) < 0.5f)
+            drawQuad(iconX,iconY,iconSize,iconSize,okTex,1);
+        else if (iconDiff > 0)
+            drawQuad(iconX,iconY,iconSize,iconSize,fireTex,1);
+        else
+            drawQuad(iconX,iconY,iconSize,iconSize,snowTex,1);
+    }
 
 
         //Ime,prezime i index
