@@ -4,7 +4,7 @@ bool klimaOn = false;
 bool lavorFull = false;
 
 float desiredTemp = 24.0f;
-float measuredTemp = 30.0f;
+float measuredTemp = 30.5f;
 
 float vent = 0.0f;
 float water = 0.0f;

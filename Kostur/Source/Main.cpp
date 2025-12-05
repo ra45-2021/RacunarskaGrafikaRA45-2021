@@ -109,15 +109,19 @@ void drawTemperature(float x, float y, float w, float h, int value,
 
     float cursorX = x - (totalWidth - (2*w + spacing)) / 2.0f - 0.005f;
 
+    float r = 0.88f;
+    float g = 1.05f;
+    float b = 1.00f;
+
     if(isNegative) {
-        drawQuad(cursorX, y, w, h, minusTex, 1);
+        drawQuad(cursorX, y, w, h, minusTex, r, g, b);
         cursorX += w + spacing;
     }
 
-    drawQuad(cursorX + 0.005f, y, w, h, digitTex[tens], 1);
+    drawQuad(cursorX + 0.005f, y, w, h, digitTex[tens], r, g, b);
     cursorX += w + spacing;
 
-    drawQuad(cursorX + 0.005f, y, w, h, digitTex[ones], 1);
+    drawQuad(cursorX + 0.005f, y, w, h, digitTex[ones], r, g, b);
 }
 
 
@@ -232,7 +236,7 @@ int main(){
 
 
         //Lavor
-        drawQuad(bucketX, bucketY, bucketW, bucketH, whiteTex, 0.3f, 0.7f,0.7f,1);
+        drawQuad(bucketX, bucketY, bucketW, bucketH, whiteTex, 0.1f, 0.7f,0.7f,1);
         drawQuad(bucketX, bucketY, bucketW, bucketH * water, whiteTex, 0.7f, 0.4f,0.6f,1);
 
 
@@ -281,10 +285,10 @@ int main(){
         //Ime,prezime i index
         float nameW = 0.45f;
         float nameH = 0.22f;
-        float nameX = -0.98f;
+        float nameX = -1.04f;
         float nameY = -0.95f;
 
-        drawQuad(nameX, nameY, nameW, nameH, nameTex, 0.2f, 1,1,1);
+        drawQuad(nameX, nameY, nameW, nameH, nameTex, 0.3f, 1,1,1);
 
 
         glfwSwapBuffers(window);
