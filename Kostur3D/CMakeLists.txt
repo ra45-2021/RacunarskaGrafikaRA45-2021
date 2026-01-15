@@ -7,7 +7,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(Kostur3D
     main.cpp
     Util.cpp
+    Source/Globals.cpp
+    Source/Camera.cpp
+    Source/MeshBuilders.cpp
+    Source/Renderer.cpp
 )
+target_include_directories(Kostur3D PRIVATE .)
+
 
 if(APPLE)
     if(EXISTS /opt/homebrew)

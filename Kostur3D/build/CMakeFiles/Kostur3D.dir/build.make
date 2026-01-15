@@ -100,23 +100,87 @@ CMakeFiles/Kostur3D.dir/Util.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Kostur3D.dir/Util.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Util.cpp -o CMakeFiles/Kostur3D.dir/Util.cpp.s
 
+CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o: CMakeFiles/Kostur3D.dir/flags.make
+CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o: /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Globals.cpp
+CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o: CMakeFiles/Kostur3D.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o -MF CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o.d -o CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o -c /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Globals.cpp
+
+CMakeFiles/Kostur3D.dir/Source/Globals.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Kostur3D.dir/Source/Globals.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Globals.cpp > CMakeFiles/Kostur3D.dir/Source/Globals.cpp.i
+
+CMakeFiles/Kostur3D.dir/Source/Globals.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Kostur3D.dir/Source/Globals.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Globals.cpp -o CMakeFiles/Kostur3D.dir/Source/Globals.cpp.s
+
+CMakeFiles/Kostur3D.dir/Source/Camera.cpp.o: CMakeFiles/Kostur3D.dir/flags.make
+CMakeFiles/Kostur3D.dir/Source/Camera.cpp.o: /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Camera.cpp
+CMakeFiles/Kostur3D.dir/Source/Camera.cpp.o: CMakeFiles/Kostur3D.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/Kostur3D.dir/Source/Camera.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Kostur3D.dir/Source/Camera.cpp.o -MF CMakeFiles/Kostur3D.dir/Source/Camera.cpp.o.d -o CMakeFiles/Kostur3D.dir/Source/Camera.cpp.o -c /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Camera.cpp
+
+CMakeFiles/Kostur3D.dir/Source/Camera.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Kostur3D.dir/Source/Camera.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Camera.cpp > CMakeFiles/Kostur3D.dir/Source/Camera.cpp.i
+
+CMakeFiles/Kostur3D.dir/Source/Camera.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Kostur3D.dir/Source/Camera.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Camera.cpp -o CMakeFiles/Kostur3D.dir/Source/Camera.cpp.s
+
+CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o: CMakeFiles/Kostur3D.dir/flags.make
+CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o: /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/MeshBuilders.cpp
+CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o: CMakeFiles/Kostur3D.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o -MF CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o.d -o CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o -c /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/MeshBuilders.cpp
+
+CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/MeshBuilders.cpp > CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.i
+
+CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/MeshBuilders.cpp -o CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.s
+
+CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o: CMakeFiles/Kostur3D.dir/flags.make
+CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o: /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Renderer.cpp
+CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o: CMakeFiles/Kostur3D.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o -MF CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o.d -o CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o -c /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Renderer.cpp
+
+CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Renderer.cpp > CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.i
+
+CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Renderer.cpp -o CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.s
+
 # Object files for target Kostur3D
 Kostur3D_OBJECTS = \
 "CMakeFiles/Kostur3D.dir/main.cpp.o" \
-"CMakeFiles/Kostur3D.dir/Util.cpp.o"
+"CMakeFiles/Kostur3D.dir/Util.cpp.o" \
+"CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o" \
+"CMakeFiles/Kostur3D.dir/Source/Camera.cpp.o" \
+"CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o" \
+"CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o"
 
 # External object files for target Kostur3D
 Kostur3D_EXTERNAL_OBJECTS =
 
 Kostur3D: CMakeFiles/Kostur3D.dir/main.cpp.o
 Kostur3D: CMakeFiles/Kostur3D.dir/Util.cpp.o
+Kostur3D: CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o
+Kostur3D: CMakeFiles/Kostur3D.dir/Source/Camera.cpp.o
+Kostur3D: CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o
+Kostur3D: CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o
 Kostur3D: CMakeFiles/Kostur3D.dir/build.make
 Kostur3D: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework
 Kostur3D: /opt/homebrew/lib/libglfw.3.4.dylib
 Kostur3D: /opt/homebrew/lib/libGLEW.2.3.0.dylib
 Kostur3D: /opt/homebrew/lib/libglm.dylib
 Kostur3D: CMakeFiles/Kostur3D.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable Kostur3D"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable Kostur3D"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Kostur3D.dir/link.txt --verbose=$(VERBOSE)
 	/opt/homebrew/bin/cmake -E copy_if_different /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/basic.vert /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/basic.vert
 	/opt/homebrew/bin/cmake -E copy_if_different /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/basic.frag /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/basic.frag

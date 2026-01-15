@@ -1,102 +1,62 @@
-﻿// Autori: Nedeljko Tesanovic i Vasilije Markovic
-// Opis: 
- 
+﻿// Klima uredjaj (3D) - projekat (podeljen na fajlove)
+
 #include <iostream>
-#include <fstream>
-#include <sstream>
+#include <vector>
+#include <thread>
+#include <chrono>
+#include <cmath>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-//GLM biblioteke
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Util.h"
 
-bool useTex = false;
-bool transparent = false;
+#include "Header/Globals.h"
+#include "Header/Camera.h"
+#include "Header/MeshBuilders.h"
+#include "Header/Renderer.h"
 
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_G && action == GLFW_PRESS) {
-        useTex = !useTex;
-    }
-    if (key == GLFW_KEY_T && action == GLFW_PRESS) {
-        transparent = !transparent;
-    }
-}
-
-unsigned int preprocessTexture(const char* filepath) {
-    unsigned int texture = loadImageToTexture(filepath); // Učitavanje teksture
-    glBindTexture(GL_TEXTURE_2D, texture); // Vezujemo se za teksturu kako bismo je podesili
-
-    // Generisanje mipmapa - predefinisani različiti formati za lakše skaliranje po potrebi (npr. da postoji 32 x 32 verzija slike, ali i 16 x 16, 256 x 256...)
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    // Podešavanje strategija za wrap-ovanje - šta da radi kada se dimenzije teksture i poligona ne poklapaju
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // S - tekseli po x-osi
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // T - tekseli po y-osi
-
-    // Podešavanje algoritma za smanjivanje i povećavanje rezolucije: nearest - bira najbliži piksel, linear - usrednjava okolne piksele
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    return texture;
-}
-
-bool firstMouse = true;
-float lastX, lastY = 500.0f; // Ekran nam je 1000 x 1000 piksela, kursor je inicijalno na sredini
-float yaw = -90.0f, pitch = 0.0f; // yaw -90: kamera gleda u pravcu z ose; pitch = 0: kamera gleda vodoravno
-glm::vec3 cameraFront = glm::vec3(0.0, 0.0, -1.0); // at-vektor je inicijalno u pravcu z ose
-
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+// -------------------- HELPERS --------------------
+static void framebuffer_size_callback(GLFWwindow*, int width, int height)
 {
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
-    lastX = xpos;
-    lastY = ypos;
-
-    float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
-}
-float fov = 45.0f;
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    fov -= (float)yoffset;
-    if (fov < 1.0f)
-        fov = 1.0f;
-    if (fov > 45.0f)
-        fov = 45.0f;
+    glViewport(0, 0, width, height);
 }
 
-int main(void)
+static void keyCallback(GLFWwindow* window, int key, int, int action, int)
 {
-    if (!glfwInit())
-    {
-        std::cout<<"GLFW Biblioteka se nije ucitala! :(\n";
+    if (key == GLFW_KEY_G && action == GLFW_PRESS) gUseTex = !gUseTex;
+    if (key == GLFW_KEY_T && action == GLFW_PRESS) gTransparent = !gTransparent;
+
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+}
+
+// ray-sphere intersection (LED + basin pick)
+static bool RayHitsSphere(const glm::vec3& ro, const glm::vec3& rd, const glm::vec3& c, float r)
+{
+    glm::vec3 oc = ro - c;
+    float b = glm::dot(oc, rd);
+    float cterm = glm::dot(oc, oc) - r * r;
+    float h = b * b - cterm;
+    return h >= 0.0f;
+}
+
+// dot gledanja ka klimi (XZ)
+static float FacingDotToAC(const glm::vec3& camPos, const glm::vec3& camFront, const glm::vec3& acPos)
+{
+    glm::vec3 f = glm::normalize(glm::vec3(camFront.x, 0.0f, camFront.z));
+    glm::vec3 toAc = glm::normalize(glm::vec3(acPos.x - camPos.x, 0.0f, acPos.z - camPos.z));
+    return glm::dot(f, toAc);
+}
+
+int main()
+{
+    if (!glfwInit()) {
+        std::cout << "GLFW Biblioteka se nije ucitala! :(\n";
         return 1;
     }
 
@@ -104,240 +64,284 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window;
-    unsigned int wWidth = 1000;
-    unsigned int wHeight = 1000;
-    const char wTitle[] = "Vezbe 7";
-    window = glfwCreateWindow(wWidth, wHeight, wTitle, NULL, NULL);
+    #ifdef __APPLE__
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    #endif
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetKeyCallback(window, keyCallback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    
-    if (window == NULL)
-    {
+    const char wTitle[] = "Klima 3D";
+
+    // FULLSCREEN
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+    GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, wTitle, monitor, nullptr);
+    if (!window) {
         std::cout << "Prozor nije napravljen! :(\n";
         glfwTerminate();
         return 2;
     }
-    
-    glfwMakeContextCurrent(window);
 
-    
-    if (glewInit() != GLEW_OK)
-    {
+    glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    // mouse look
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetKeyCallback(window, keyCallback);
+    glfwSetCursorPosCallback(window, MouseCallback);
+    glfwSetScrollCallback(window, ScrollCallback);
+
+    if (glewInit() != GLEW_OK) {
         std::cout << "GLEW nije mogao da se ucita! :'(\n";
+        glfwTerminate();
         return 3;
     }
-    
+
+    int fbW = 0, fbH = 0;
+    glfwGetFramebufferSize(window, &fbW, &fbH);
+    glViewport(0, 0, fbW, fbH);
+
+    // required toggles
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
-    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ PROMJENLJIVE I BAFERI +++++++++++++++++++++++++++++++++++++++++++++++++
-    
-    unsigned int unifiedShader = createShader("basic.vert", "basic.frag");
-    glUseProgram(unifiedShader);
-    glUniform1i(glGetUniformLocation(unifiedShader, "uTex"), 0);
+    // shader
+    unsigned int shader = createShader("basic.vert", "basic.frag");
+    const int uLightDir = glGetUniformLocation(shader, "uLightDir");
+    glUseProgram(shader);
+    glUniform3f(uLightDir, -0.4f, -1.0f, -0.2f);
 
-    unsigned int dice[6] = { };
-    for (int i = 0; i < 6; ++i) {
-        std::string path = "res/dice" + std::to_string(i + 1) + ".png";
-        dice[i] = preprocessTexture(path.c_str());
-    }
+    Renderer R;
+    R.Init(shader, "res/overlay.png");
 
-    float vertices[] =
-    {
-      //X    Y    Z      R    G    B    A         S   T
-        // Prednja strana (1)
-        0.1, 0.1, 0.1,   1.0, 0.0, 0.0, 1.0,      0,  0,    0, 0, 1,
-       -0.1, 0.1, 0.1,   1.0, 0.0, 0.0, 1.0,      1,  0,    0, 0, 1,
-       -0.1,-0.1, 0.1,   1.0, 0.0, 0.0, 1.0,      1,  1,    0, 0, 1,
-        0.1,-0.1, 0.1,   1.0, 0.0, 0.0, 1.0,      0,  1,    0, 0, 1,
-       
-        // Leva strana (2)
-       -0.1, 0.1, 0.1,   0.0, 0.0, 1.0, 1.0,      0,  0,    -1, 0, 0,
-       -0.1, 0.1,-0.1,   0.0, 0.0, 1.0, 1.0,      1,  0,    -1, 0, 0,
-       -0.1,-0.1,-0.1,   0.0, 0.0, 1.0, 1.0,      1,  1,    -1, 0, 0,
-       -0.1,-0.1, 0.1,   0.0, 0.0, 1.0, 1.0,      0,  1,    -1, 0, 0,
-       
-        // Donja strana (3)
-        0.1,-0.1, 0.1,   1.0, 1.0, 1.0, 1.0,      0,  0,    0, -1, 0,
-       -0.1,-0.1, 0.1,   1.0, 1.0, 1.0, 1.0,      1,  0,    0, -1, 0,
-       -0.1,-0.1,-0.1,   1.0, 1.0, 1.0, 1.0,      1,  1,    0, -1, 0,
-        0.1,-0.1,-0.1,   1.0, 1.0, 1.0, 1.0,      0,  1,    0, -1, 0,
+    // -------------------- Create basin / water meshes from builders --------------------
+    // kratko: gBasinHeight (default 0.30 in Globals.cpp)
+    std::vector<float> basinMesh;
+    BuildCylinder(basinMesh, 0.30f, gBasinHeight, 64, glm::vec4(0.70f,0.70f,0.70f,1.0f), true);
+    R.CreateFromFloats(R.basin, basinMesh, false);
 
-        // Gornja strana (4)
-        0.1, 0.1, 0.1,   1.0, 1.0, 0.0, 1.0,      0,  0,    0, 1, 0,
-        0.1, 0.1,-0.1,   1.0, 1.0, 0.0, 1.0,      1,  0,    0, 1, 0,
-       -0.1, 0.1,-0.1,   1.0, 1.0, 0.0, 1.0,      1,  1,    0, 1, 0,
-       -0.1, 0.1, 0.1,   1.0, 1.0, 0.0, 1.0,      0,  1,    0, 1, 0,
+    std::vector<float> waterMesh;
+    BuildCylinder(waterMesh, 0.26f, gBasinHeight, 64, glm::vec4(0.30f,0.60f,1.00f,0.55f), true);
+    R.CreateFromFloats(R.water, waterMesh, false);
 
-        // Desna strana (5)
-        0.1, 0.1, 0.1,   0.0, 1.0, 0.0, 1.0,      0,  0,    1, 0, 0,
-        0.1,-0.1, 0.1,   0.0, 1.0, 0.0, 1.0,      1,  0,    1, 0, 0,
-        0.1,-0.1,-0.1,   0.0, 1.0, 0.0, 1.0,      1,  1,    1, 0, 0,
-        0.1, 0.1,-0.1,   0.0, 1.0, 0.0, 1.0,      0,  1,    1, 0, 0,
-        
-        // Zadnja strana (6)
-        0.1, 0.1,-0.1,   1.0, 0.5, 0.0, 1.0,      0,  0,    0, 0, -1,
-        0.1,-0.1,-0.1,   1.0, 0.5, 0.0, 1.0,      1,  0,    0, 0, -1,
-       -0.1,-0.1,-0.1,   1.0, 0.5, 0.0, 1.0,      1,  1,    0, 0, -1,
-       -0.1, 0.1,-0.1,   1.0, 0.5, 0.0, 1.0,      0,  1,    0, 0, -1,
-    };
-    unsigned int stride = (3 + 4 + 2 + 3) * sizeof(float); 
-    
-    unsigned int VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    // droplets = sphere
+    std::vector<float> sphereMesh;
+    BuildSphere(sphereMesh, 1.0f, 16, 12, glm::vec4(0.35f,0.70f,1.0f,0.55f));
+    R.CreateFromFloats(R.dropletSphere, sphereMesh, false);
 
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // update derived positions
+    gLedPos = gAcPos + glm::vec3(1.35f, 0.20f, 0.55f);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(7 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, (void*)(10 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    glClearColor(0.08f, 0.10f, 0.13f, 1.0f);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    
-
-    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++            UNIFORME            +++++++++++++++++++++++++++++++++++++++++++++++++
-
-    glm::mat4 model = glm::mat4(1.0f); //Matrica transformacija - mat4(1.0f) generise jedinicnu matricu
-    unsigned int modelLoc = glGetUniformLocation(unifiedShader, "uM");
-    
-    glm::mat4 view; //Matrica pogleda (kamere)
-    glm::vec3 cameraPos = glm::vec3(0.0, 0.0, 2.0);
-    glm::vec3 cameraUp = glm::vec3(0.0, 1.0, 0.0);
-
-    view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp); // lookAt(Gdje je kamera, u sta kamera gleda, jedinicni vektor pozitivne Y ose svijeta  - ovo rotira kameru)
-    unsigned int viewLoc = glGetUniformLocation(unifiedShader, "uV");
-    
-    
-    glm::mat4 projectionP = glm::perspective(glm::radians(fov), (float)wWidth / (float)wHeight, 0.1f, 100.0f); //Matrica perspektivne projekcije (FOV, Aspect Ratio, prednja ravan, zadnja ravan)
-    glm::mat4 projectionO = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f); //Matrica ortogonalne projekcije (Lijeva, desna, donja, gornja, prednja i zadnja ravan)
-    unsigned int projectionLoc = glGetUniformLocation(unifiedShader, "uP");
-
-
-    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ RENDER LOOP - PETLJA ZA CRTANJE +++++++++++++++++++++++++++++++++++++++++++++++++
-    glUseProgram(unifiedShader); //Slanje default vrijednosti uniformi
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); //(Adresa matrice, broj matrica koje saljemo, da li treba da se transponuju, pokazivac do matrica)
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionO));
-    glBindVertexArray(VAO);
-
-    glClearColor(0.5, 0.5, 0.5, 1.0);
-    glCullFace(GL_BACK);//Biranje lica koje ce se eliminisati (tek nakon sto ukljucimo Face Culling)
+    // timing
+    const double targetFrame = 1.0 / 75.0;
+    double lastTime = glfwGetTime();
 
     while (!glfwWindowShouldClose(window))
     {
-        double startTime = glfwGetTime();
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        const double frameStart = glfwGetTime();
+        double dt = frameStart - lastTime;
+        lastTime = frameStart;
+        if (dt > 0.05) dt = 0.05;
+
+        // required toggles by keys 1-4
+        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) glEnable(GL_DEPTH_TEST);
+        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) glDisable(GL_DEPTH_TEST);
+        if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) glEnable(GL_CULL_FACE);
+        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) glDisable(GL_CULL_FACE);
+
+        // optional move with arrows (planar)
+        float speed = 1.6f * (float)dt;
+        float fw = 0.0f, rt = 0.0f;
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)    fw += speed;
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  fw -= speed;
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)  rt += speed;
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) rt -= speed;
+        if (fw != 0.0f || rt != 0.0f) gCamera.MovePlanar(fw, rt);
+
+        // -------------------- INPUT: LED gaze toggle + basin click --------------------
+        bool lmb = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+        if (lmb && !gPrevLmb)
         {
-            glfwSetWindowShouldClose(window, GL_TRUE);
+            // gaze + click => toggle AC (block if basinFull is desired - you can keep or remove)
+            if (RayHitsSphere(gCamera.pos, gCamera.front, gLedPos, gLedR))
+                gAcOn = !gAcOn;
+
+            // click on basin when full and AC off
+            if (gBasinFull && !gAcOn && gBasinState == BasinState::OnFloor)
+            {
+                glm::vec3 basinCenter = gBasinPos;
+                if (RayHitsSphere(gCamera.pos, gCamera.front, basinCenter, 0.45f))
+                    gBasinState = BasinState::InFrontFull;
+            }
+        }
+        gPrevLmb = lmb;
+
+        // -------------------- cover animation --------------------
+        float targetAngle = gAcOn ? -60.0f : 0.0f;
+        gCoverAngle = glm::mix(gCoverAngle, targetAngle, 1.0f - pow(0.001f, (float)dt));
+
+        // -------------------- droplets spawn/update + water fill --------------------
+        gSpawnAcc += dt;
+        if (gAcOn && gBasinState == BasinState::OnFloor && !gBasinFull && gSpawnAcc >= 0.05)
+        {
+            gSpawnAcc = 0.0;
+            Droplet d;
+            d.pos = gAcPos + glm::vec3(0.0f, -0.25f, 0.55f);  // nozzle
+            d.vel = glm::vec3(0.0f, -0.20f, 0.0f);
+            gDrops.push_back(d);
         }
 
-        //Testiranje dubine
-        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+        float halfH = gBasinHeight * 0.5f;
+        float basinYTop = gBasinPos.y + halfH;
+        float basinYBottom = gBasinPos.y - halfH;
+
+        for (auto& d : gDrops)
         {
-            glEnable(GL_DEPTH_TEST); //Ukljucivanje testiranja Z bafera
-        }
-        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-        {
-            glDisable(GL_DEPTH_TEST);
+            if (!d.alive) continue;
+
+            d.vel.y -= 0.85f * (float)dt;
+            d.pos += d.vel * (float)dt;
+
+            glm::vec2 dxz(d.pos.x - gBasinPos.x, d.pos.z - gBasinPos.z);
+            bool inside = glm::dot(dxz, dxz) <= gBasinRadiusInner * gBasinRadiusInner;
+
+            float waterY = basinYBottom + (basinYTop - basinYBottom) * gWaterLevel;
+            float contactY = (gWaterLevel < 0.02f) ? basinYBottom : waterY;
+
+            if (inside && d.pos.y <= contactY)
+            {
+                d.alive = false;
+                gWaterLevel += 0.02f;
+
+                if (gWaterLevel >= 1.0f) {
+                    gWaterLevel = 1.0f;
+                    gBasinFull = true;
+                    gAcOn = false; // kao u 2D
+                }
+            }
+
+            if (d.pos.y < -10.0f) d.alive = false;
         }
 
-        //Odstranjivanje lica (Prethodno smo podesili koje lice uklanjamo sa glCullFace)
-        if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+        // -------------------- basin carry --------------------
+        if (gBasinState == BasinState::InFrontFull || gBasinState == BasinState::InFrontEmpty)
         {
-            glEnable(GL_CULL_FACE);
-        }
-        if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
-        {
-            glDisable(GL_CULL_FACE);
+            gBasinPos = gCamera.pos + gCamera.front * 0.85f + glm::vec3(0.0f, -0.30f, 0.0f);
         }
 
-        //Transformisanje trouglova
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        // -------------------- SPACE logic (180 deg / toward AC) --------------------
+        bool space = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+        if (space && !gPrevSpace)
         {
-            //model = glm::translate(model, glm::vec3(-0.01, 0.0, 0.0)); //Pomjeranje (Matrica transformacije, pomjeraj po XYZ)
-            model = glm::rotate(model, glm::radians(-0.5f), glm::vec3(0.0f, 1.0f, 0.0f)); //Rotiranje (Matrica transformacije, ugao rotacije u radijanima, osa rotacije)
-            //model = glm::scale(model, glm::vec3(0.99, 1.0, 1.0)); //Skaliranje (Matrica transformacije, skaliranje po XYZ)
+            float dotToAc = FacingDotToAC(gCamera.pos, gCamera.front, gAcPos);
+
+            // empty only if ~180 away from AC
+            if (gBasinState == BasinState::InFrontFull && dotToAc < -0.90f)
+            {
+                gWaterLevel = 0.0f;
+                gBasinFull = false;
+                gBasinState = BasinState::InFrontEmpty;
+                for (auto& dr : gDrops) dr.alive = false;
+            }
+            // return if toward AC
+            else if (gBasinState == BasinState::InFrontEmpty && dotToAc > 0.90f)
+            {
+                gBasinPos = gBasinOriginalPos;
+                gBasinState = BasinState::OnFloor;
+            }
         }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        gPrevSpace = space;
+
+        // -------------------- Matrices --------------------
+        glfwGetFramebufferSize(window, &fbW, &fbH);
+        float aspect = (fbH == 0) ? 1.0f : (float)fbW / (float)fbH;
+
+        glm::mat4 V = gCamera.View();
+        glm::mat4 P = gCamera.Projection(aspect);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        R.SetCommonUniforms(V, P);
+
+        // -------------------- Render opaque --------------------
+        // AC body
         {
-            //model = glm::translate(model, glm::vec3(0.01, 0.0, 0.0));
-            model = glm::rotate(model, glm::radians(0.5f), glm::vec3(0.0f, 1.0f, 0.0f));
-            //model = glm::scale(model, glm::vec3(1.01, 1.0, 1.0));
-        }
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        {
-            //model = glm::translate(model, glm::vec3(0.0, 0.01, 0.0));
-            model = glm::rotate(model, glm::radians(-0.5f), glm::vec3(1.0f, 0.0f, 1.0f));
-            //model = glm::scale(model, glm::vec3(1.0, 1.01, 1.0));
-        }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        {
-            //model = glm::translate(model, glm::vec3(0.0, -0.01, 0.0));
-            model = glm::rotate(model, glm::radians(0.5f), glm::vec3(1.0f, 0.0f, 1.0f));
-            //model = glm::scale(model, glm::vec3(1.0, 0.99, 1.0));
+            glm::mat4 M(1.0f);
+            M = glm::translate(M, gAcPos);
+            M = glm::rotate(M, glm::radians(25.0f), glm::vec3(0,1,0));
+            M = glm::scale(M, glm::vec3(3.2f, 1.3f, 1.2f));
+            R.DrawCube(M, glm::vec4(0.85f, 0.85f, 0.90f, 1.0f), false);
         }
 
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        {   
-            cameraPos += 0.01f * glm::normalize(glm::vec3(cameraFront.z, 0, -cameraFront.x));
-        }
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        // cover
         {
-            cameraPos -= 0.01f * glm::normalize(glm::vec3(cameraFront.z, 0, -cameraFront.x));
+            glm::mat4 C(1.0f);
+            C = glm::translate(C, gAcPos + glm::vec3(0.0f, 0.25f, 0.60f));
+            C = glm::rotate(C, glm::radians(gCoverAngle), glm::vec3(1,0,0));
+            C = glm::translate(C, glm::vec3(0.0f, 0.0f, -0.60f));
+            C = glm::scale(C, glm::vec3(3.2f, 0.25f, 1.05f));
+            R.DrawCube(C, glm::vec4(0.78f, 0.78f, 0.82f, 1.0f), false);
         }
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+
+        // LED
         {
-            cameraPos += 0.01f * glm::normalize(glm::vec3(cameraFront.x, 0, cameraFront.z));
+            glm::mat4 L(1.0f);
+            L = glm::translate(L, gLedPos);
+            L = glm::scale(L, glm::vec3(0.18f));
+            if (gAcOn) R.DrawCube(L, glm::vec4(0.25f, 1.0f, 0.25f, 1.0f), false);
+            else       R.DrawCube(L, glm::vec4(1.0f, 0.25f, 0.25f, 1.0f), false);
         }
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+
+        // basin
         {
-            cameraPos -= 0.01f * glm::normalize(glm::vec3(cameraFront.x, 0, cameraFront.z));
+            glm::mat4 B(1.0f);
+            B = glm::translate(B, gBasinPos);
+            R.DrawMeshTriangles(R.basin, B, glm::vec4(1,1,1,1), false);
         }
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Osvjezavamo i Z bafer i bafer boje
-        
-        glUseProgram(unifiedShader);
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-        projectionP = glm::perspective(glm::radians(fov), (float)wWidth / (float)wHeight, 0.1f, 100.0f);
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projectionP));
-
-        glUniform1i(glGetUniformLocation(unifiedShader, "useTex"), useTex);
-        glUniform1i(glGetUniformLocation(unifiedShader, "transparent"), transparent);
-        glActiveTexture(GL_TEXTURE0);
-        for (int i = 0; i < 6; ++i) {
-            glBindTexture(GL_TEXTURE_2D, dice[i]);
-            glDrawArrays(GL_TRIANGLE_FAN, i * 4, 4);
+        // -------------------- Transparent: water + droplets --------------------
+        // water
+        if (gWaterLevel > 0.01f)
+        {
+            float halfH = gBasinHeight * 0.5f;
+            glm::mat4 Wm(1.0f);
+            Wm = glm::translate(Wm, gBasinPos + glm::vec3(0.0f, -halfH + halfH * gWaterLevel, 0.0f));
+            Wm = glm::scale(Wm, glm::vec3(1.0f, gWaterLevel, 1.0f));
+            R.DrawMeshTriangles(R.water, Wm, glm::vec4(1,1,1,1), true);
         }
 
-        while (glfwGetTime() - startTime < 1.0 / 60) {}
+        // droplets (spheres)
+        for (const auto& d : gDrops)
+        {
+            if (!d.alive) continue;
+            glm::mat4 Dm(1.0f);
+            Dm = glm::translate(Dm, d.pos);
+            Dm = glm::scale(Dm, glm::vec3(0.06f));
+            R.DrawMeshTriangles(R.dropletSphere, Dm, glm::vec4(0.35f,0.70f,1.0f,1.0f), true);
+        }
+
+        // -------------------- Overlay --------------------
+        GLboolean depthWas = glIsEnabled(GL_DEPTH_TEST);
+        glDisable(GL_DEPTH_TEST);
+        R.DrawOverlay();
+        if (depthWas) glEnable(GL_DEPTH_TEST);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        // 75 FPS limiter
+        const double frameEnd = glfwGetTime();
+        const double frameTime = frameEnd - frameStart;
+        if (frameTime < targetFrame)
+            std::this_thread::sleep_for(std::chrono::duration<double>(targetFrame - frameTime));
     }
 
-    // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ POSPREMANJE +++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-    glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteProgram(unifiedShader);
+    R.Destroy();
+    glDeleteProgram(shader);
 
     glfwTerminate();
     return 0;

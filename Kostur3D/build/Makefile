@@ -129,6 +129,102 @@ Kostur3D/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/build
 .PHONY : Kostur3D/fast
 
+Source/Camera.o: Source/Camera.cpp.o
+.PHONY : Source/Camera.o
+
+# target to build an object file
+Source/Camera.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/Camera.cpp.o
+.PHONY : Source/Camera.cpp.o
+
+Source/Camera.i: Source/Camera.cpp.i
+.PHONY : Source/Camera.i
+
+# target to preprocess a source file
+Source/Camera.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/Camera.cpp.i
+.PHONY : Source/Camera.cpp.i
+
+Source/Camera.s: Source/Camera.cpp.s
+.PHONY : Source/Camera.s
+
+# target to generate assembly for a file
+Source/Camera.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/Camera.cpp.s
+.PHONY : Source/Camera.cpp.s
+
+Source/Globals.o: Source/Globals.cpp.o
+.PHONY : Source/Globals.o
+
+# target to build an object file
+Source/Globals.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o
+.PHONY : Source/Globals.cpp.o
+
+Source/Globals.i: Source/Globals.cpp.i
+.PHONY : Source/Globals.i
+
+# target to preprocess a source file
+Source/Globals.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/Globals.cpp.i
+.PHONY : Source/Globals.cpp.i
+
+Source/Globals.s: Source/Globals.cpp.s
+.PHONY : Source/Globals.s
+
+# target to generate assembly for a file
+Source/Globals.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/Globals.cpp.s
+.PHONY : Source/Globals.cpp.s
+
+Source/MeshBuilders.o: Source/MeshBuilders.cpp.o
+.PHONY : Source/MeshBuilders.o
+
+# target to build an object file
+Source/MeshBuilders.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o
+.PHONY : Source/MeshBuilders.cpp.o
+
+Source/MeshBuilders.i: Source/MeshBuilders.cpp.i
+.PHONY : Source/MeshBuilders.i
+
+# target to preprocess a source file
+Source/MeshBuilders.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.i
+.PHONY : Source/MeshBuilders.cpp.i
+
+Source/MeshBuilders.s: Source/MeshBuilders.cpp.s
+.PHONY : Source/MeshBuilders.s
+
+# target to generate assembly for a file
+Source/MeshBuilders.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.s
+.PHONY : Source/MeshBuilders.cpp.s
+
+Source/Renderer.o: Source/Renderer.cpp.o
+.PHONY : Source/Renderer.o
+
+# target to build an object file
+Source/Renderer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o
+.PHONY : Source/Renderer.cpp.o
+
+Source/Renderer.i: Source/Renderer.cpp.i
+.PHONY : Source/Renderer.i
+
+# target to preprocess a source file
+Source/Renderer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.i
+.PHONY : Source/Renderer.cpp.i
+
+Source/Renderer.s: Source/Renderer.cpp.s
+.PHONY : Source/Renderer.s
+
+# target to generate assembly for a file
+Source/Renderer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.s
+.PHONY : Source/Renderer.cpp.s
+
 Util.o: Util.cpp.o
 .PHONY : Util.o
 
@@ -186,6 +282,18 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... Kostur3D"
+	@echo "... Source/Camera.o"
+	@echo "... Source/Camera.i"
+	@echo "... Source/Camera.s"
+	@echo "... Source/Globals.o"
+	@echo "... Source/Globals.i"
+	@echo "... Source/Globals.s"
+	@echo "... Source/MeshBuilders.o"
+	@echo "... Source/MeshBuilders.i"
+	@echo "... Source/MeshBuilders.s"
+	@echo "... Source/Renderer.o"
+	@echo "... Source/Renderer.i"
+	@echo "... Source/Renderer.s"
 	@echo "... Util.o"
 	@echo "... Util.i"
 	@echo "... Util.s"

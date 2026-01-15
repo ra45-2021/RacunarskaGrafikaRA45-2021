@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/packages/glm.1.0.2/build/native/include",
+                "${workspaceFolder}",
+                "${workspaceFolder}/packages/glfw.3.4.0/build/native/include",
+                "${workspaceFolder}/packages/glew-2.2.0.2.2.0.1/build/native/include"
+            ],
+            "defines": [],
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "macos-clang-arm64"
+        }
+    ],
+    "version": 4
+}
