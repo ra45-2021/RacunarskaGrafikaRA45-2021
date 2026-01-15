@@ -1,15 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -e
 
-clang++ -std=c++17 \
-  Source/Main.cpp \
-  Source/Shader.cpp \
-  Source/RenderUtils.cpp \
-  Source/Globals.cpp \
-  Source/Util.cpp \
-  -IHeader \
-  -I/opt/homebrew/include \
-  -L/opt/homebrew/lib \
-  -lglfw -lGLEW -framework OpenGL \
-  -o app
+mkdir -p build
+cd build
 
-./app
+cmake .. -DCMAKE_BUILD_TYPE=Debug
+cmake --build . -j
+
+./Kostur3D
