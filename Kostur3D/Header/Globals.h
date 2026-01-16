@@ -36,3 +36,17 @@ extern float gBasinHeight;
 
 extern bool gPrevLmb;
 extern bool gPrevSpace;
+
+extern glm::vec3 gLampLocalOffset;
+extern float gLampSize;
+
+extern glm::vec3 gNozzleLocalOffset;
+
+extern glm::vec3 gAcScale;
+extern glm::vec3 gCoverHingeLocal;
+extern glm::vec3 gCoverAfterRotateLocal;
+extern glm::vec3 gCoverScale;
+
+extern float gGravity;
+extern float gFillPerDrop;
+extern float gDropletSize;

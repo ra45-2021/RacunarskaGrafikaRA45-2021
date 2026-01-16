@@ -35,9 +35,9 @@ void CameraController::OnMouseMove(double xpos, double ypos)
 
 void CameraController::OnScroll(double yoffset)
 {
-    fov -= (float)yoffset;
-    if (fov < 1.0f)  fov = 1.0f;
-    if (fov > 45.0f) fov = 45.0f;
+    targetFov -= (float)yoffset * 2.0f;
+    if (targetFov < 5.0f)  targetFov = 5.0f;
+    if (targetFov > 45.0f) targetFov = 45.0f;
 }
 
 void CameraController::MovePlanar(float forwardAmt, float rightAmt)
@@ -56,6 +56,7 @@ glm::mat4 CameraController::View() const
 
 glm::mat4 CameraController::Projection(float aspect) const
 {
+    const_cast<CameraController*>(this)->fov = glm::mix(fov, targetFov, 0.1f);
     return glm::perspective(glm::radians(fov), aspect, 0.1f, 100.0f);
 }
 

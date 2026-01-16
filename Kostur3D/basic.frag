@@ -24,7 +24,7 @@ void main()
     vec3 N = normalize(vN);
     float diff = max(dot(N, normalize(-uLightDir)), 0.0);
 
-    float ambient = 0.30;
+    float ambient = 0.65;
     float lighting = ambient + (1.0 - ambient) * diff;
 
     col.rgb *= lighting;

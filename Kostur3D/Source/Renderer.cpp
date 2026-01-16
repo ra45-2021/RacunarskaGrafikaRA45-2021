@@ -50,10 +50,10 @@ bool Renderer::Init(GLuint shaderProgram, const char* overlayPath)
         q.push_back(0); q.push_back(0); q.push_back(1);
     };
 
-    push(-0.98f,  0.95f, 0.0f, 0,1);
-    push(-0.55f,  0.95f, 0.0f, 1,1);
-    push(-0.55f,  0.80f, 0.0f, 1,0);
-    push(-0.98f,  0.80f, 0.0f, 0,0);
+    push(-0.95f, -0.75f, 0.0f, 0, 1); 
+    push(-0.75f, -0.75f, 0.0f, 1, 1); 
+    push(-0.75f, -0.95f, 0.0f, 1, 0);
+    push(-0.95f, -0.95f, 0.0f, 0, 0); 
 
     CreateFromFloats(overlayQuad, q, false);
     overlayQuad.vertexCount = 4;
@@ -192,6 +192,13 @@ void Renderer::DrawMeshTriangles(const MeshGL& m, const glm::mat4& M, const glm:
 
 void Renderer::DrawOverlay()
 {
+    glUseProgram(shader);
+    
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_CULL_FACE); 
+
     glm::mat4 I(1.0f);
     glUniformMatrix4fv(uV, 1, GL_FALSE, glm::value_ptr(I));
     glUniformMatrix4fv(uP, 1, GL_FALSE, glm::value_ptr(I));
@@ -199,12 +206,15 @@ void Renderer::DrawOverlay()
 
     glUniform1i(uUseTex, 1);
     glUniform1i(uTransparent, 1);
-    glUniform4f(uTint, 1,1,1,1);
+    glUniform4f(uTint, 1.0f, 1.0f, 1.0f, 0.4f);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, overlayTex);
+    glUniform1i(uTex, 0);
 
     glBindVertexArray(overlayQuad.vao);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     glBindVertexArray(0);
+
+    glEnable(GL_DEPTH_TEST);
 }

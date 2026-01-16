@@ -11,7 +11,8 @@ public:
 
     float yaw = -90.0f;
     float pitch = 0.0f;
-    float fov = 45.0f;
+    float fov = 30.0f;
+    float targetFov = 30.0f;
 
     bool firstMouse = true;
     float lastX = 0.0f;
