@@ -26,6 +26,7 @@ struct Renderer {
 
     MeshGL centerQuad;
     GLuint centerTex = 0;
+    MeshGL screenQuad;
 
     bool Init(GLuint shaderProgram, const char* overlayPath);
     void Destroy();
@@ -39,5 +40,7 @@ struct Renderer {
     void DrawOverlay();
     void DrawTexturedMesh(const MeshGL& m, const glm::mat4& M, GLuint texID, const glm::vec4& tint = glm::vec4(1.0f));
     void DrawCenter();
+    void CreateScreenQuad();
+    void DrawTexturedScreen(const glm::mat4& M, GLuint texID, const glm::vec4& tint = glm::vec4(1,1,1,1));
 
 };

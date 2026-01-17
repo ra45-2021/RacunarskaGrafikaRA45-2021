@@ -77,23 +77,21 @@ void mouse_button_callback(GLFWwindow* window,int button,int action,int mods){
     }
 }
 
-void key_callback(GLFWwindow* w,int key,int sc,int action,int mods){
-    if(action==GLFW_PRESS){
-        if(key==GLFW_KEY_UP)
-            desiredTemp = std::min(40.0f,desiredTemp+1.0f);
+static void keyCallback(GLFWwindow* window, int key, int, int action, int)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
 
-        if(key==GLFW_KEY_DOWN)
-            desiredTemp = std::max(-10.0f,desiredTemp-1.0f);
+    if (action == GLFW_PRESS)
+    {
+        if (key == GLFW_KEY_W)
+            desiredTemp = std::min(40.0f, desiredTemp + 1.0f);
 
-        if(key==GLFW_KEY_SPACE){
-            water = 0.0f;
-            lavorFull = false;
-        }
-
-        if(key==GLFW_KEY_ESCAPE)
-            glfwSetWindowShouldClose(w,true);
+        if (key == GLFW_KEY_S)
+            desiredTemp = std::max(-10.0f, desiredTemp - 1.0f);
     }
 }
+
 
 void drawTemperature(float x, float y, float w, float h, int value,
                      unsigned int digitTex[10], unsigned int minusTex)

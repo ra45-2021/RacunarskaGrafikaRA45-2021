@@ -84,6 +84,8 @@ bool Renderer::Init(GLuint shaderProgram, const char* overlayPath)
     CreateFromFloats(overlayQuad, q, false);
     overlayQuad.vertexCount = 4;
 
+    CreateScreenQuad();
+
     return true;
 }
 
@@ -101,6 +103,7 @@ void Renderer::Destroy()
     kill(dropletSphere);
     kill(overlayQuad);
     kill(centerQuad);
+    kill(screenQuad);
 
     if (overlayTex) glDeleteTextures(1, &overlayTex);
     overlayTex = 0;
@@ -292,4 +295,47 @@ void Renderer::DrawCenter()
     glBindVertexArray(0);
 
     glEnable(GL_DEPTH_TEST);
+}
+
+void Renderer::CreateScreenQuad()
+{
+    std::vector<float> q;
+    q.reserve(6 * STRIDE_FLOATS);
+
+    auto V = [&](float x, float y, float u, float v){
+        q.push_back(x); q.push_back(y); q.push_back(0.0f);  
+        q.push_back(1); q.push_back(1); q.push_back(1); q.push_back(1); 
+        q.push_back(u); q.push_back(v);                    
+        q.push_back(0); q.push_back(0); q.push_back(1);     
+    };
+
+    V(-0.5f,  0.5f, 0, 1);
+    V( 0.5f,  0.5f, 1, 1);
+    V( 0.5f, -0.5f, 1, 0);
+
+    V(-0.5f,  0.5f, 0, 1);
+    V( 0.5f, -0.5f, 1, 0);
+    V(-0.5f, -0.5f, 0, 0);
+
+    CreateFromFloats(screenQuad, q, false);
+}
+
+void Renderer::DrawTexturedScreen(const glm::mat4& M, GLuint texID, const glm::vec4& tint)
+{
+    glUseProgram(shader);
+
+    glUniform1i(uUseTex, 1);
+    glUniform1i(uTransparent, 1);
+    glUniform4f(uTint, tint.r, tint.g, tint.b, tint.a);
+    glUniformMatrix4fv(uM, 1, GL_FALSE, glm::value_ptr(M));
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glUniform1i(uTex, 0);
+
+    glBindVertexArray(screenQuad.vao);
+    glDrawArrays(GL_TRIANGLES, 0, screenQuad.vertexCount);
+    glBindVertexArray(0);
+
+    glUniform1i(uUseTex, 0);
 }

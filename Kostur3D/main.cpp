@@ -85,6 +85,14 @@ int main() {
     unsigned int snowTex = loadImageToTexture("res/snow.png");
     unsigned int okTex   = loadImageToTexture("res/check.png");
     unsigned int lampTex = loadImageToTexture("res/lamp.png");
+    unsigned int minusTex = loadImageToTexture("res/minus.png");
+
+    unsigned int whiteTex;
+    unsigned char px[4] = {255,255,255,255};
+    glGenTextures(1, &whiteTex);
+    glBindTexture(GL_TEXTURE_2D, whiteTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, px);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
 
     double lastTime = glfwGetTime();
@@ -105,10 +113,11 @@ int main() {
         if (fw != 0.0f || rt != 0.0f) gCamera.MovePlanar(fw, rt);
 
         // Kontrola temperature (W i S)
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) 
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             desiredTemp = std::min(40.0f, desiredTemp + 0.05f);
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) 
-            desiredTemp = std::max(16.0f, desiredTemp - 0.05f);
+
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            desiredTemp = std::max(-10.0f, desiredTemp - 0.05f);
         // Miš interakcija
         bool lmb = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
         if (lmb && !gPrevLmb) {
@@ -138,12 +147,12 @@ int main() {
         gPrevSpace = space;
 
         // Animacija klime i vode
-        float targetAngle = gAcOn ? 35.0f : 0.0f;
+        float targetAngle = gAcOn ? 45.0f : 0.0f;
         gCoverAngle = glm::mix(gCoverAngle, targetAngle, 1.0f - pow(0.001f, (float)dt));
 
         if (gAcOn) {
             float diff = desiredTemp - measuredTemp;
-            if (std::abs(diff) > 0.05f) measuredTemp += (diff > 0 ? 1.0f : -1.0f) * (float)dt * 0.4f;
+            if (std::abs(diff) > 0.05f) measuredTemp += (diff > 0 ? 1.0f : -1.0f) * (float)dt * 0.9f;
             
             gSpawnAcc += dt;
             if (gBasinState == BasinState::OnFloor && !gBasinFull && gSpawnAcc >= 0.42) {
@@ -180,37 +189,163 @@ int main() {
 
         // Render klime
         glm::mat4 Ma = glm::scale(glm::translate(glm::mat4(1.0f), gAcPos), glm::vec3(4.5f, 1.3f, 1.2f));
-        R.DrawCube(Ma, glm::vec4(1, 1, 1, 1), false);
+        R.DrawCube(Ma, glm::vec4(1.05f, 1.05f, 1.05f, 1.05f), false);
 
-        glm::mat4 Mc = glm::translate(glm::mat4(1.0f), gAcPos + glm::vec3(0, -0.13f, -0.6f));
-        Mc = glm::rotate(Mc, glm::radians(gCoverAngle), glm::vec3(1, 0, 0));
-        Mc = glm::scale(glm::translate(Mc, glm::vec3(0, 0, 0.6f)), glm::vec3(4.5f, 0.05f, 1.2f));
-        R.DrawCube(Mc, glm::vec4(0.9f, 0.95f, 0.97f, 1), false);
+        // COVER 
+        glm::vec3 coverSize(4.5f, 0.05f, 1.2f);
+
+        glm::vec3 coverBase = gAcPos + glm::vec3(0.0f, -0.135f, 0.003f);
+        float halfD = coverSize.z * 0.1f;
+
+        glm::mat4 Mc(1.0f);
+
+        Mc = glm::translate(Mc, coverBase);
+        Mc = glm::translate(Mc, glm::vec3(0.0f, 0.0f, -halfD));
+        Mc = glm::rotate(Mc, glm::radians(gCoverAngle), glm::vec3(1.0f,0.0f,0.0f));
+        Mc = glm::translate(Mc, glm::vec3(0.0f, 0.0f, +halfD));
+        Mc = glm::scale(Mc, coverSize);
+
+        R.DrawCube(Mc, glm::vec4(0.9f, 0.95f, 0.97f, 1.0f), false);
 
         // LED i Displej
-        glm::mat4 Ml = glm::scale(glm::rotate(glm::translate(glm::mat4(1.0f), gLedPos), glm::radians(90.0f), glm::vec3(1,0,0)), glm::vec3(0.085f, 0.08f, 0.08f));
-        R.DrawTexturedMesh(R.basin, Ml, lampTex, gAcOn ? glm::vec4(1, 0.2f, 0.2f, 1) : glm::vec4(0.5f, 0.5f, 0.5f, 1));
+        glm::mat4 Ml = glm::scale(
+            glm::rotate(glm::translate(glm::mat4(1.0f), gLedPos), glm::radians(90.0f), glm::vec3(1,0,0)),
+            glm::vec3(0.085f, 0.08f, 0.08f)
+        );
+        R.DrawTexturedMesh(R.basin, Ml, lampTex, gAcOn ? glm::vec4(1, 0.2f, 0.2f, 1) : glm::vec4(0.5f, 0.5f, 0.5f, 1)
+        );
 
-        if (gAcOn) {
-            float pZ = 0.62f;
-            R.DrawTexturedMesh(R.cube, glm::scale(glm::translate(glm::mat4(1.0f), gAcPos + glm::vec3(-0.75f, 0.05f, pZ-0.15f)), glm::vec3(0.15f, 0.25f, 0.01f)), digitTex[(int)desiredTemp/10]);
-            R.DrawTexturedMesh(R.cube, glm::scale(glm::translate(glm::mat4(1.0f), gAcPos + glm::vec3(-0.55f, 0.05f, pZ)), glm::vec3(0.15f, 0.25f, 0.01f)), digitTex[(int)desiredTemp%10]);
-            R.DrawTexturedMesh(R.cube, glm::scale(glm::translate(glm::mat4(1.0f), gAcPos + glm::vec3(-0.10f, 0.05f, pZ)), glm::vec3(0.15f, 0.25f, 0.01f)), digitTex[(int)measuredTemp/10]);
-            R.DrawTexturedMesh(R.cube, glm::scale(glm::translate(glm::mat4(1.0f), gAcPos + glm::vec3(0.10f, 0.05f, pZ)), glm::vec3(0.15f, 0.25f, 0.01f)), digitTex[(int)measuredTemp%10]);
-            
-            unsigned int icon = okTex;
-            float diff = desiredTemp - measuredTemp;
-            if (diff > 0.5f) icon = fireTex; else if (diff < -0.5f) icon = snowTex;
-            R.DrawTexturedMesh(R.cube, glm::scale(glm::translate(glm::mat4(1.0f), gAcPos + glm::vec3(0.65f, 0.2f, pZ)), glm::vec3(0.25f, 0.25f, 0.01f)), icon);
-        }
+        // ---------- Screen rectangles (ALWAYS) ----------
+        float pZ = 0.125f;
+
+        // these are the 3 screen “panels” on the AC (positions)
+        glm::vec3 s1(-0.30f, -0.075f, pZ);
+        glm::vec3 s2(-0.05f, -0.075f, pZ);
+        glm::vec3 s3( 0.20f, -0.075f, pZ);
+
+        // size of the panel rectangles
+        glm::vec3 screenScale(0.17f, 0.07f, 1.0f);
+
+        // panel tint: grey when OFF, brighter when ON
+        glm::vec4 panelTint = gAcOn ? glm::vec4(0.85f,0.85f,0.85f,1.0f)
+                                    : glm::vec4(0.55f,0.55f,0.55f,1.0f);
+
+        auto DrawScreenQuad = [&](const glm::vec3& offset, const glm::vec3& S, GLuint tex, const glm::vec4& tint)
+        {
+            glm::mat4 M = glm::translate(glm::mat4(1.0f), gAcPos + offset);
+            M = glm::scale(M, S);
+            R.DrawTexturedScreen(M, tex, tint);
+        };
+
+        // draw 3 panels
+        DrawScreenQuad(s1, screenScale, whiteTex, panelTint);
+        DrawScreenQuad(s2, screenScale, whiteTex, panelTint);
+        DrawScreenQuad(s3, screenScale, whiteTex, panelTint);
+
+        // ---------- Digits + minus + icon (ALWAYS, like 2D) ----------
+        glm::vec4 digitTint = gAcOn ? glm::vec4(0.88f, 1.05f, 1.00f, 1.0f)
+                                    : glm::vec4(0.70f, 0.70f, 0.70f, 1.0f);
+
+        // slot size inside the panel
+        glm::vec3 slotScale(0.05f, 0.05f, 1.0f);
+        glm::vec3 minusScale(0.05f, 0.05f, 1.0f);
+
+        float spacing = 0.01f;
+        float rightShift = 0.009f; 
+
+        auto DrawTemperature3D = [&](const glm::vec3& panelCenter, int value)
+        {
+            float zFront = 0.002f;
+            float zBack  = -0.002f;
+            float zOffset = gAcOn ? zFront : zBack;
+
+            bool isNegative = value < 0;
+            int absValue = std::abs(value);
+
+            int tens = absValue / 10;
+            int ones = absValue % 10;
+
+            float wD = slotScale.x;
+            float wM = minusScale.x;
+
+            float totalWidth = wM + spacing + wD + spacing + wD; 
+            float cursorX = panelCenter.x - totalWidth * 0.5f + rightShift;
+
+            if (isNegative) {
+                DrawScreenQuad(glm::vec3(cursorX, panelCenter.y, panelCenter.z + zOffset),
+                            minusScale, minusTex, digitTint);
+            }
+            cursorX += wM + spacing;
+
+            // tens
+            DrawScreenQuad(glm::vec3(cursorX, panelCenter.y, panelCenter.z + zOffset),
+                        slotScale, digitTex[tens], digitTint);
+            cursorX += wD + spacing;
+
+            // ones
+            DrawScreenQuad(glm::vec3(cursorX, panelCenter.y, panelCenter.z + zOffset),
+                        slotScale, digitTex[ones], digitTint);
+        };
+
+
+        // panel centers (match 2D idea: draw temp centered inside each panel)
+        glm::vec3 center1 = s1 + glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 center2 = s2 + glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 center3 = s3 + glm::vec3(0.0f, 0.0f, 0.0f);
+
+        DrawTemperature3D(center1, (int)desiredTemp);
+        DrawTemperature3D(center2, (int)measuredTemp);
+
+        // icon in 3rd panel (centered)
+        GLuint icon = okTex;
+        float iconDiff = desiredTemp - measuredTemp;
+        if (std::fabs(iconDiff) < 0.5f) icon = okTex;
+        else if (iconDiff > 0.0f) icon = fireTex;
+        else icon = snowTex;
+
+        float zFront = 0.002f;
+        float zBack  = -0.002f;
+        float zOffset = gAcOn ? zFront : zBack;
+
+        glm::vec3 iconScale(0.07f, 0.07f, 1.0f);
+        glm::vec3 iconPos = glm::vec3(center3.x, center3.y, center3.z + zOffset);
+
+        DrawScreenQuad(iconPos, iconScale, icon, digitTint);
+
 
         // Lavor, voda i kapljice
         glDisable(GL_CULL_FACE);
-        R.DrawMeshTriangles(R.basin, glm::translate(glm::mat4(1.0f), gBasinPos), glm::vec4(1,1,1,1), false);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+
+        R.DrawMeshTriangles(
+            R.basin,
+            glm::translate(glm::mat4(1.0f), gBasinPos),
+            glm::vec4(1,1,1,1),
+            false
+        );
+
         if (gWaterLevel > 0.01f) {
-            glm::mat4 Mw = glm::scale(glm::translate(glm::mat4(1.0f), gBasinPos + glm::vec3(0, (-gBasinHeight*0.5f + (gBasinHeight*gWaterLevel*0.5f)), 0)), glm::vec3(0.99f, gWaterLevel, 0.99f));
+            float waterCenterY = (-gBasinHeight * 0.5f) + (gBasinHeight * gWaterLevel * 0.5f);
+
+            glm::mat4 Mw =
+                glm::scale(
+                    glm::translate(glm::mat4(1.0f),
+                        gBasinPos + glm::vec3(0.0f, waterCenterY, 0.0f)),
+                    glm::vec3(0.990f, gWaterLevel, 0.990f)   
+                );
+
+            glDepthMask(GL_FALSE);
+
+            glEnable(GL_POLYGON_OFFSET_FILL);
+            glPolygonOffset(-1.0f, -1.0f);
+
             R.DrawMeshTriangles(R.water, Mw, glm::vec4(1,1,1,1), true);
+
+            glDisable(GL_POLYGON_OFFSET_FILL);
+            glDepthMask(GL_TRUE);
         }
+
         glEnable(GL_CULL_FACE);
 
         for (auto& d : gDrops) if(d.alive) R.DrawMeshTriangles(R.dropletSphere, glm::scale(glm::translate(glm::mat4(1.0f), d.pos), glm::vec3(0.02f)), glm::vec4(0.35f,0.7f,1,1), true);

@@ -10,7 +10,7 @@ float gLedR = 0.04f;
 bool  gAcOn = false;
 float gCoverAngle = 0.0f;
 
-glm::vec3 gBasinOriginalPos(-0.22f, -1.0f, -3.0f);
+glm::vec3 gBasinOriginalPos(-0.22f, -1.0f, -2.8f);
 glm::vec3 gBasinPos = gBasinOriginalPos;
 BasinState gBasinState = BasinState::OnFloor;
 
@@ -41,4 +41,4 @@ float gFillPerDrop = 0.02f;
 float gDropletSize = 0.06f;
 
 float desiredTemp = 24.0f;
-float measuredTemp = 30.5f;
+float measuredTemp = 30.0f;
