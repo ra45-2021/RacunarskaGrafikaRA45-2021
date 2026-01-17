@@ -4,7 +4,7 @@ bool gUseTex = false;
 bool gTransparent = false;
 
 glm::vec3 gAcPos(-0.2f, 1.0f, -3.0f);
-glm::vec3 gLedPos = gAcPos + glm::vec3(1.35f, 0.20f, 0.55f);
+glm::vec3 gLedPos = gAcPos + glm::vec3(3.4f, 0.21f, 0.55f);
 float gLedR = 0.04f;
 
 bool  gAcOn = false;

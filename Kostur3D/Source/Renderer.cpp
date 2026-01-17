@@ -339,3 +339,55 @@ void Renderer::DrawTexturedScreen(const glm::mat4& M, GLuint texID, const glm::v
 
     glUniform1i(uUseTex, 0);
 }
+
+void Renderer::DrawTexturedCube(const glm::mat4& M, GLuint tex, const glm::vec4& tint)
+{
+    glUseProgram(shader);
+
+    glUniform1i(uUseTex, 1);
+    glUniform1i(uTransparent, 0);
+    glUniform4f(uTint, tint.r, tint.g, tint.b, tint.a);
+    glUniformMatrix4fv(uM, 1, GL_FALSE, glm::value_ptr(M));
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glUniform1i(uTex, 0);
+
+    glBindVertexArray(cube.vao);
+    for (int i = 0; i < 6; ++i)
+        glDrawArrays(GL_TRIANGLE_FAN, i * 4, 4);
+    glBindVertexArray(0);
+
+    glUniform1i(uUseTex, 0);
+}
+
+void Renderer::DrawTexturedCubeFace(const glm::mat4& M, GLuint tex, const glm::vec4& baseTint, const glm::vec4& faceTint, CubeFace face, float lift)
+{
+    DrawCube(M, baseTint, false);
+
+    glUseProgram(shader);
+
+    glUniform1i(uUseTex, 1);
+    glUniform1i(uTransparent, 0);
+    glUniform4f(uTint, faceTint.r, faceTint.g, faceTint.b, faceTint.a);
+
+    glm::mat4 M2 = glm::scale(M, glm::vec3(1.0f + lift, 1.0f + lift, 1.0f + lift));
+    glUniformMatrix4fv(uM, 1, GL_FALSE, glm::value_ptr(M2));
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glUniform1i(uTex, 0);
+
+    glBindVertexArray(cube.vao);
+
+    int f = (int)face;          
+    glDrawArrays(GL_TRIANGLE_FAN, f * 4, 4);
+
+    glBindVertexArray(0);
+
+    glUniform1i(uUseTex, 0);
+}
+
+
+
+bool gPrevLookLed = false;

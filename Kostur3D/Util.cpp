@@ -1,4 +1,4 @@
-#include "Util.h";
+#include "Util.h"
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <fstream>
@@ -21,7 +21,7 @@ unsigned int compileShader(GLenum type, const char* source)
     {
         ss << file.rdbuf();
         file.close();
-        std::cout << "Uspjesno procitao fajl sa putanje \"" << source << "\"!" << std::endl;
+        std::cout << "Uspesno procitao fajl sa putanje \"" << source << "\"!" << std::endl;
     }
     else {
         ss << "";
@@ -45,8 +45,8 @@ unsigned int compileShader(GLenum type, const char* source)
             printf("VERTEX");
         else if (type == GL_FRAGMENT_SHADER)
             printf("FRAGMENT");
-        printf(" sejder ima gresku! Greska: \n");
-        printf(infoLog);
+        //printf(" sejder ima gresku! Greska: \n");
+        //printf(infoLog);
     }
     return shader;
 }
@@ -76,8 +76,8 @@ unsigned int createShader(const char* vsSource, const char* fsSource)
     if (success == GL_FALSE)
     {
         glGetShaderInfoLog(program, 512, NULL, infoLog);
-        std::cout << "Objedinjeni sejder ima gresku! Greska: \n";
-        std::cout << infoLog << std::endl;
+        //std::cout << "Objedinjeni sejder ima gresku! Greska: \n";
+        //std::cout << infoLog << std::endl;
     }
 
     //Posto su kodovi sejdera u objedinjenom sejderu, oni pojedinacni programi nam ne trebaju, pa ih brisemo zarad ustede na memoriji
@@ -134,7 +134,6 @@ GLFWcursor* loadImageToCursor(const char* filePath) {
         image.height = TextureHeight;
         image.pixels = ImageData;
 
-        // Tacka na povr�ini slike kursora koja se pona�a kao hitboks
         int hotspotX = image.width / 6;
         int hotspotY = image.height / 6;
 
@@ -147,4 +146,5 @@ GLFWcursor* loadImageToCursor(const char* filePath) {
         stbi_image_free(ImageData);
 
     }
+    return 0;
 }

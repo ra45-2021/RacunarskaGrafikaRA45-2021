@@ -53,3 +53,5 @@ extern float gDropletSize;
 
 extern float desiredTemp;
 extern float measuredTemp;
+
+extern bool gPrevLookLed;

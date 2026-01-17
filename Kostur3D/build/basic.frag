@@ -10,6 +10,8 @@ uniform int transparent;
 uniform vec4 uTint;
 uniform vec3 uLightDir; 
 
+uniform int uUnlit;
+
 out vec4 FragColor;
 
 void main()
@@ -22,10 +24,15 @@ void main()
         col *= texCol;
     }
 
+    if (uUnlit == 1) {
+        FragColor = col;      
+        return;
+    }
+
     vec3 N = normalize(vN);
     float diff = max(dot(N, normalize(-uLightDir)), 0.0);
 
-    float ambient = 0.82;          
+    float ambient = 0.85;          
     float diffuseStrength = 0.35;  
 
     float lighting = ambient + diffuseStrength * diff;

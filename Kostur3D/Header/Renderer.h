@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
+enum class CubeFace : int { Front=0, Left=1, Bottom=2, Top=3, Right=4, Back=5 };
+
 struct MeshGL {
     GLuint vao = 0;
     GLuint vbo = 0;
@@ -16,6 +18,7 @@ struct Renderer {
     MeshGL water;
     MeshGL dropletSphere;
     MeshGL overlayQuad;
+
 
     GLuint overlayTex = 0;
 
@@ -42,5 +45,7 @@ struct Renderer {
     void DrawCenter();
     void CreateScreenQuad();
     void DrawTexturedScreen(const glm::mat4& M, GLuint texID, const glm::vec4& tint = glm::vec4(1,1,1,1));
+    void DrawTexturedCube(const glm::mat4& M, GLuint tex, const glm::vec4& tint = glm::vec4(1,1,1,1));
+    void DrawTexturedCubeFace(const glm::mat4& M, GLuint tex, const glm::vec4& baseTint,  const glm::vec4& faceTint,  CubeFace face, float lift = 0.001f);
 
 };
