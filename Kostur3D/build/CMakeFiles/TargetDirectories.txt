@@ -1,0 +1,3 @@
+/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/CMakeFiles/Kostur3D.dir
+/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/CMakeFiles/edit_cache.dir
+/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/build/CMakeFiles/rebuild_cache.dir

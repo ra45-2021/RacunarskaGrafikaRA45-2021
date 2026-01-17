@@ -13,20 +13,20 @@
 Shader* basicShader = nullptr;
 
 float acX = -0.6f;
-float acY = 0.55f;
+float acY = 0.60f;
 float acW = 1.2f;
-float acH = 0.25f;
+float acH = 0.35f;
 
 float lampSize = 0.07f;
-float lampX = acX + acW - 0.12f;
-float lampY = acY + acH - 0.15f;
+float lampX = acX + acW - lampSize - 0.02f;
+float lampY = acY + 0.04f; 
 
 float screenW = 0.22f;
 float screenH = 0.10f;
 float screenY = acY + 0.03f;
 
 float bucketX = -0.4f;
-float bucketY = -0.75f;
+float bucketY = -0.95f;
 float bucketW = 0.8f;
 float bucketH = 0.25f;
 
@@ -41,9 +41,7 @@ GLFWcursor* loadCursor(const char* path){
     image.height = h;
     image.pixels = img;
 
-    int hotspotX = 62;
-    int hotspotY = 43;
-    GLFWcursor* c = glfwCreateCursor(&image, hotspotX, hotspotY);
+    GLFWcursor* c = glfwCreateCursor(&image, 0, 0);
 
     stbi_image_free(img);
     return c;
@@ -79,43 +77,51 @@ void mouse_button_callback(GLFWwindow* window,int button,int action,int mods){
     }
 }
 
-void key_callback(GLFWwindow* w,int key,int sc,int action,int mods){
-    if(action==GLFW_PRESS){
-        if(key==GLFW_KEY_UP)
-            desiredTemp = std::min(40.0f,desiredTemp+1.0f);
+static void keyCallback(GLFWwindow* window, int key, int, int action, int)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
 
-        if(key==GLFW_KEY_DOWN)
-            desiredTemp = std::max(-10.0f,desiredTemp-1.0f);
+    if (action == GLFW_PRESS)
+    {
+        if (key == GLFW_KEY_W)
+            desiredTemp = std::min(40.0f, desiredTemp + 1.0f);
 
-        if(key==GLFW_KEY_SPACE){
-            water = 0.0f;
-            lavorFull = false;
-        }
-
-        if(key==GLFW_KEY_ESCAPE)
-            glfwSetWindowShouldClose(w,true);
+        if (key == GLFW_KEY_S)
+            desiredTemp = std::max(-10.0f, desiredTemp - 1.0f);
     }
 }
+
 
 void drawTemperature(float x, float y, float w, float h, int value,
-                     unsigned int digitTex[10], unsigned int minusTex) 
+                     unsigned int digitTex[10], unsigned int minusTex)
 {
-    float cursorX = x;
+    bool isNegative = value < 0;
+    int absValue = std::abs(value);
 
-    if(value < 0) {
-        drawQuad(cursorX, y, w, h, minusTex, 1);
-        cursorX += w + 0.01f;
-        value = -value;  
+    int tens = absValue / 10;
+    int ones = absValue % 10;
+
+    float spacing = 0.005f;
+    float totalWidth = (isNegative ? 3 : 2) * w + (isNegative ? 2 : 1) * spacing;
+
+    float cursorX = x - (totalWidth - (2*w + spacing)) / 2.0f - 0.005f;
+
+    float r = 0.88f;
+    float g = 1.05f;
+    float b = 1.00f;
+
+    if(isNegative) {
+        drawQuad(cursorX, y, w, h, minusTex, r, g, b);
+        cursorX += w + spacing;
     }
 
-    int tens = value / 10;
-    int ones = value % 10;
+    drawQuad(cursorX + 0.005f, y, w, h, digitTex[tens], r, g, b);
+    cursorX += w + spacing;
 
-    drawQuad(cursorX, y, w, h, digitTex[tens], 1);
-    cursorX += w + 0.01f;
-
-    drawQuad(cursorX, y, w, h, digitTex[ones], 1);
+    drawQuad(cursorX + 0.005f, y, w, h, digitTex[ones], r, g, b);
 }
+
 
 
 int main(){
@@ -147,6 +153,9 @@ int main(){
     basicShader = &shader;
 
     initQuad();
+    
+    unsigned int lampCircleTex = loadTexture("Resources/lamp.png");
+
 
     unsigned int fireTex = loadTexture("Resources/fire.png");
     unsigned int snowTex = loadTexture("Resources/snow.png");
@@ -171,12 +180,14 @@ int main(){
     double last = glfwGetTime();
     double target = 1.0/75.0;
 
+    float aspect = (float)SCREEN_HEIGHT / (float)SCREEN_WIDTH;
+
     while(!glfwWindowShouldClose(window)){
         double now = glfwGetTime();
         double dt = now-last;
         last = now;
 
-        glClearColor(0.15f,0.15f,0.15f,1.0f);
+        glClearColor(0.18f,0.22f,0.28f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         if(klimaOn){
@@ -212,17 +223,18 @@ int main(){
         //Klima
         drawQuad(acX, acY, acW, acH, whiteTex, 1, 1,1,1);
 
-        if(klimaOn)
-            drawQuad(lampX, lampY, lampSize, lampSize, whiteTex, 1, 1,0,0);
-        else
-            drawQuad(lampX, lampY, lampSize, lampSize, whiteTex, 1, 0.3f,0.3f,0.3f);
+        if (klimaOn) {
+            drawQuad(lampX, lampY, lampSize * aspect, lampSize, lampCircleTex, 1, 0.85f, 0.05f, 0.05f);
+        } else {
+            drawQuad(lampX, lampY, lampSize * aspect, lampSize, lampCircleTex, 1, 0.55f, 0.55f, 0.55f);
+        }
 
         float ventH = 0.05f * vent;
-        drawQuad(acX, acY - ventH, acW, ventH, whiteTex, 1, 0.2f,0.2f,0.2f);
+        drawQuad(acX, acY - ventH, acW, ventH, whiteTex, 1, 0.75f,0.75f,0.75f);
 
 
         //Lavor
-        drawQuad(bucketX, bucketY, bucketW, bucketH, whiteTex, 0.3f, 0.7f,0.7f,1);
+        drawQuad(bucketX, bucketY, bucketW, bucketH, whiteTex, 0.1f, 0.7f,0.7f,1);
         drawQuad(bucketX, bucketY, bucketW, bucketH * water, whiteTex, 0.7f, 0.4f,0.6f,1);
 
 
@@ -230,52 +242,51 @@ int main(){
         float s2X = s1X + screenW + 0.05f;
         float s3X = s2X + screenW + 0.05f;
 
-        if (klimaOn) {
-            drawQuad(s1X, screenY, screenW, screenH, whiteTex, 1, 0,0,0);
-            drawQuad(s2X, screenY, screenW, screenH, whiteTex, 1, 0,0,0);
-            drawQuad(s3X, screenY, screenW, screenH, whiteTex, 1, 0,0,0);
 
-            float slotW = 0.06f;
-            float slotH = 0.09f;
+    if (!klimaOn) {
+        drawQuad(s1X, screenY, screenW, screenH, whiteTex, 1, 0.55f, 0.55f, 0.55f);
+        drawQuad(s2X, screenY, screenW, screenH, whiteTex, 1, 0.55f, 0.55f, 0.55f);
+        drawQuad(s3X, screenY, screenW, screenH, whiteTex, 1, 0.55f, 0.55f, 0.55f);
+    }
 
-            float centerX1 = s1X + (screenW - (slotW*2 + 0.01f))/2;
-            float centerX2 = s2X + (screenW - (slotW*2 + 0.01f))/2;
-            float centerY  = screenY + (screenH - slotH)/2;
+    else {
+        drawQuad(s1X, screenY, screenW, screenH, whiteTex, 1, 0.85f, 0.85f, 0.85f);
+        drawQuad(s2X, screenY, screenW, screenH, whiteTex, 1, 0.85f, 0.85f, 0.85f);
+        drawQuad(s3X, screenY, screenW, screenH, whiteTex, 1, 0.85f, 0.85f, 0.85f);
 
-            drawTemperature(centerX1, centerY,
-                            slotW, slotH,
-                            (int)desiredTemp,
-                            digitTex, minusTex);
+        float slotW = 0.07f;
+        float slotH = 0.07f;
 
-            drawTemperature(centerX2, centerY,
-                            slotW, slotH,
-                            (int)measuredTemp,
-                            digitTex, minusTex);
+        float centerX1 = s1X + (screenW - (slotW*2 + 0.01f))/2;
+        float centerX2 = s2X + (screenW - (slotW*2 + 0.01f))/2;
+        float centerY  = screenY + (screenH - slotH)/2 - 0.003f;
 
-            //Ikonice
-            float iconSize = 0.10f;
-            float iconX = s3X + (screenW - iconSize)/2;
-            float iconY = screenY + (screenH - iconSize)/2;
+        drawTemperature(centerX1, centerY, slotW, slotH, (int)desiredTemp, digitTex, minusTex);
+        drawTemperature(centerX2, centerY, slotW, slotH, (int)measuredTemp, digitTex, minusTex);
 
-            float iconDiff = desiredTemp - measuredTemp;
+        // Icon
+        float iconSize = 0.10f;
+        float iconX = s3X + (screenW - iconSize)/2;
+        float iconY = screenY + (screenH - iconSize)/2;
 
-            if (std::fabs(iconDiff) < 0.5f) {
-                drawQuad(iconX,iconY,iconSize,iconSize,okTex,1);
-            } else if (iconDiff > 0.0f) {
-                drawQuad(iconX,iconY,iconSize,iconSize,fireTex,1);
-            } else {
-                drawQuad(iconX,iconY,iconSize,iconSize,snowTex,1);
-            }
+        float iconDiff = desiredTemp - measuredTemp;
 
-        }
-        
+        if (std::fabs(iconDiff) < 0.5f)
+            drawQuad(iconX,iconY,iconSize,iconSize,okTex,1);
+        else if (iconDiff > 0)
+            drawQuad(iconX,iconY,iconSize,iconSize,fireTex,1);
+        else
+            drawQuad(iconX,iconY,iconSize,iconSize,snowTex,1);
+    }
+
+
         //Ime,prezime i index
         float nameW = 0.45f;
-        float nameH = 0.12f;
-        float nameX = -0.98f;
+        float nameH = 0.22f;
+        float nameX = -1.04f;
         float nameY = -0.95f;
 
-        drawQuad(nameX, nameY, nameW, nameH, nameTex, 0.75f, 1,1,1);
+        drawQuad(nameX, nameY, nameW, nameH, nameTex, 0.3f, 1,1,1);
 
 
         glfwSwapBuffers(window);
