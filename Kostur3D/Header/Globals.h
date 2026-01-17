@@ -15,7 +15,7 @@ enum class BasinState { OnFloor, InFrontFull, InFrontEmpty };
 
 extern glm::vec3 gAcPos;
 extern glm::vec3 gLedPos;
-extern float     gLedR;
+extern float gLedR;
 
 extern bool  gAcOn;
 extern float gCoverAngle;
@@ -50,3 +50,6 @@ extern glm::vec3 gCoverScale;
 extern float gGravity;
 extern float gFillPerDrop;
 extern float gDropletSize;
+
+extern float desiredTemp;
+extern float measuredTemp;

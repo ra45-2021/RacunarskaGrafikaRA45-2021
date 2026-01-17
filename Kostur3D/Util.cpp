@@ -89,45 +89,36 @@ unsigned int createShader(const char* vsSource, const char* fsSource)
     return program;
 }
 
-unsigned loadImageToTexture(const char* filePath) {
-    int TextureWidth;
-    int TextureHeight;
-    int TextureChannels;
-    unsigned char* ImageData =
-        stbi_load(filePath, &TextureWidth, &TextureHeight, &TextureChannels, STBI_rgb_alpha);
-
-    TextureChannels = 4;
-    if (ImageData != NULL)
-    {
-        //Slike se osnovno ucitavaju naopako pa se moraju ispraviti da budu uspravne
-        stbi__vertical_flip(ImageData, TextureWidth, TextureHeight, TextureChannels);
-
-        // Provjerava koji je format boja ucitane slike
-        GLint InternalFormat = -1;
-        switch (TextureChannels) {
-        case 1: InternalFormat = GL_RED; break;
-        case 2: InternalFormat = GL_RG; break;
-        case 3: InternalFormat = GL_RGB; break;
-        case 4: InternalFormat = GL_RGBA; break;
-        default: InternalFormat = GL_RGB; break;
-        }
-
-        unsigned int Texture;
-        glGenTextures(1, &Texture);
-        glBindTexture(GL_TEXTURE_2D, Texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat, TextureWidth, TextureHeight, 0, InternalFormat, GL_UNSIGNED_BYTE, ImageData);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        // oslobadjanje memorije zauzete sa stbi_load posto vise nije potrebna
-        stbi_image_free(ImageData);
-        return Texture;
-    }
-    else
-    {
-        std::cout << "Textura nije ucitana! Putanja texture: " << filePath << std::endl;
-        stbi_image_free(ImageData);
+unsigned int loadImageToTexture(const char* filePath)
+{
+    int w, h, ch;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* data = stbi_load(filePath, &w, &h, &ch, STBI_rgb_alpha);
+    if (!data) {
+        std::cout << "[TEX FAIL] " << filePath << " | " << stbi_failure_reason() << "\n";
         return 0;
     }
+
+    GLuint tex = 0;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    // IMPORTANT on mac: sized internal format
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    // IMPORTANT: make texture complete (NO mipmaps)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    stbi_image_free(data);
+    return tex;
 }
+
 
 GLFWcursor* loadImageToCursor(const char* filePath) {
     int TextureWidth;
@@ -143,7 +134,7 @@ GLFWcursor* loadImageToCursor(const char* filePath) {
         image.height = TextureHeight;
         image.pixels = ImageData;
 
-        // Tacka na površini slike kursora koja se ponaša kao hitboks
+        // Tacka na povrï¿½ini slike kursora koja se ponaï¿½a kao hitboks
         int hotspotX = image.width / 6;
         int hotspotY = image.height / 6;
 

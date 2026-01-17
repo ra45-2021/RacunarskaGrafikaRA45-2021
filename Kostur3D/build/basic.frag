@@ -8,7 +8,6 @@ uniform sampler2D uTex;
 uniform int useTex;
 uniform int transparent;
 uniform vec4 uTint;
-
 uniform vec3 uLightDir; 
 
 out vec4 FragColor;
@@ -18,16 +17,19 @@ void main()
     vec4 col = vColor * uTint;
 
     if (useTex == 1) {
-        col *= texture(uTex, vUV);
+        vec4 texCol = texture(uTex, vUV);
+        if(texCol.a < 0.1) discard; 
+        col *= texCol;
     }
 
     vec3 N = normalize(vN);
     float diff = max(dot(N, normalize(-uLightDir)), 0.0);
-
     float ambient = 0.65;
     float lighting = ambient + (1.0 - ambient) * diff;
 
-    col.rgb *= lighting;
+    if (useTex == 0) {
+        col.rgb *= lighting;
+    }
 
     FragColor = col;
 }

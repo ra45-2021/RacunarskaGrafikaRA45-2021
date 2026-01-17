@@ -5,7 +5,7 @@ bool gTransparent = false;
 
 glm::vec3 gAcPos(-0.2f, 1.0f, -3.0f);
 glm::vec3 gLedPos = gAcPos + glm::vec3(1.35f, 0.20f, 0.55f);
-float gLedR = 0.10f;
+float gLedR = 0.04f;
 
 bool  gAcOn = false;
 float gCoverAngle = 0.0f;
@@ -39,3 +39,6 @@ glm::vec3 gCoverScale = glm::vec3(3.2f, 0.25f, 1.05f);
 float gGravity = 0.85f;
 float gFillPerDrop = 0.02f;
 float gDropletSize = 0.06f;
+
+float desiredTemp = 24.0f;
+float measuredTemp = 30.5f;

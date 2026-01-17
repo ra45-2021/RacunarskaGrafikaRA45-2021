@@ -24,6 +24,9 @@ struct Renderer {
     GLint uUseTex = -1, uTransparent = -1, uTint = -1;
     GLint uTex = -1;
 
+    MeshGL centerQuad;
+    GLuint centerTex = 0;
+
     bool Init(GLuint shaderProgram, const char* overlayPath);
     void Destroy();
 
@@ -34,4 +37,7 @@ struct Renderer {
     void DrawCube(const glm::mat4& M, const glm::vec4& tint, bool transparent);
     void DrawMeshTriangles(const MeshGL& m, const glm::mat4& M, const glm::vec4& tint, bool transparent);
     void DrawOverlay();
+    void DrawTexturedMesh(const MeshGL& m, const glm::mat4& M, GLuint texID, const glm::vec4& tint = glm::vec4(1.0f));
+    void DrawCenter();
+
 };
