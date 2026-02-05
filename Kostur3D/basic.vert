@@ -12,7 +12,7 @@ uniform mat4 uP;
 out vec4 vColor;
 out vec2 vUV;
 out vec3 vN;
-out vec3 vWorldPos;   // NOVO
+out vec3 vWorldPos; 
 
 void main()
 {

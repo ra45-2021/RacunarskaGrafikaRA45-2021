@@ -902,6 +902,13 @@ int main()
 
         bool holdingBasin = (gBasinState == BasinState::InFrontFull || gBasinState == BasinState::InFrontEmpty);
 
+        if (holdingBasin)
+        {
+            glClear(GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_DEPTH_TEST);
+        }
+
+        //Daljinski + Centar
         if (!holdingBasin && remoteOk)
         {
             glm::vec3 front = glm::normalize(gCamera.front);
