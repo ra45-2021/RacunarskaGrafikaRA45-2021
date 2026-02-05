@@ -329,24 +329,26 @@ int main()
 
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
             desiredTemp = std::max(-10.0f, desiredTemp - 0.05f);
-bool dNow = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
-if (dNow && !prevD) depthOn = !depthOn;
-prevD = dNow;
 
-bool cNow = glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
-if (cNow && !prevC) cullOn = !cullOn;
-prevC = cNow;
+        // Kontrola dubine i odstranjanje naličja (D i C)
+        bool dNow = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
+        if (dNow && !prevD) depthOn = !depthOn;
+        prevD = dNow;
 
-// Globalno stanje (po frame-u)
-depthOn ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
-cullOn  ? glEnable(GL_CULL_FACE)  : glDisable(GL_CULL_FACE);
+        bool cNow = glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
+        if (cNow && !prevC) cullOn = !cullOn;
+        prevC = cNow;
 
-// Helper za “lokalno” menjanje, ali da user-toggle uvek pobedi
-auto SetCullLocal = [&](bool wantCullForThisDraw)
-{
-    if (!cullOn) { glDisable(GL_CULL_FACE); return; } // ako je user ugasio, ne sme niko da ga upali
-    wantCullForThisDraw ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
-};
+        depthOn ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+        cullOn  ? glEnable(GL_CULL_FACE)  : glDisable(GL_CULL_FACE);
+
+        auto SetCullLocal = [&](bool wantCullForThisDraw)
+        {
+            if (!cullOn) { glDisable(GL_CULL_FACE); return; } 
+            wantCullForThisDraw ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+        };
+
+
         // Kontrola mišem
         {
             glm::vec3 rd = glm::normalize(gCamera.front);
@@ -447,7 +449,7 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
 
         glm::vec3 lightPos = glm::vec3(-0.5f, 4.5f, -1.0f);
         glm::vec3 lightColor = glm::vec3(0.98f, 0.98f, 1.0f); 
-        float lightPower = 0.8f;  
+        float lightPower = 0.9f;  
         float ambient = 0.75f;
 
         glUniform3fv(glGetUniformLocation(shader, "uLightPos"), 1, glm::value_ptr(lightPos));
@@ -495,9 +497,9 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
         Mwall = glm::rotate(Mwall, glm::radians(180.0f), glm::vec3(0, 0, 1));
         Mwall = glm::scale(Mwall, wallSize);
 
-        glDisable(GL_CULL_FACE);
+        SetCullLocal(false);
         R.DrawTexturedCube(Mwall, wallTex);
-        glEnable(GL_CULL_FACE);
+        SetCullLocal(true);
 
         // Zid kupatila
         glm::vec3 wall2Size(13.0f, 8.0f, 0.1f);
@@ -514,10 +516,10 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
             glm::vec3 pos = glm::vec3(1.7f, 0.15f, -1.13f);
             glm::mat4 M = glm::translate(glm::mat4(1.0f), pos);
             M = glm::scale(M, wallThin);
-            glDisable(GL_CULL_FACE);
+            SetCullLocal(false);
             R.DrawTexturedCube(M, wall2Tex);
             R.DrawTexturedCube(Mwall2, bathroomWallTex);
-            glEnable(GL_CULL_FACE);
+            SetCullLocal(true);
         }
 
         // Zid kupatila 2
@@ -529,9 +531,9 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
             M = glm::rotate(M, glm::radians(180.0f), glm::vec3(1, 0, 0));
             M = glm::scale(M, backWallSize);
 
-            glDisable(GL_CULL_FACE);
+            SetCullLocal(false);
             R.DrawTexturedCube(M, bathroomWallTex);
-            glEnable(GL_CULL_FACE);
+            SetCullLocal(true);
         }
 
         //Pod
@@ -582,9 +584,9 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
             Ms = glm::rotate(Ms, glm::radians(90.0f), glm::vec3(0, 1, 0));
             Ms = glm::scale(Ms, glm::vec3(0.00035f));
 
-            glDisable(GL_CULL_FACE);
+            SetCullLocal(false);
             R.DrawMeshTriangles(sinkMesh, Ms, glm::vec4(1.0f, 0.99f, 0.96f, 1.0f), false);
-            glEnable(GL_CULL_FACE);
+            SetCullLocal(true);
         }
 
         // Lavabo - Donji Deo
@@ -598,9 +600,9 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
 
             glm::vec4 bodyCol(0.95f, 0.95f, 0.95f, 1.0f);
 
-            glDisable(GL_CULL_FACE);
+            SetCullLocal(false);
             R.DrawTexturedCubeFace(M, cupboardTex, bodyCol, glm::vec4(1,1,1,1), CubeFace::Back, 0.004f);
-            glEnable(GL_CULL_FACE);
+            SetCullLocal(true);
             
         }
 
@@ -615,9 +617,9 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
 
             Mm = glm::scale(Mm, glm::vec3(0.01f));
 
-            glDisable(GL_CULL_FACE);
+            SetCullLocal(false);
             R.DrawMeshTriangles(floorMatMesh, Mm, glm::vec4(0.60f, 0.68f, 0.73f, 1.0f), false);
-            glEnable(GL_CULL_FACE);
+            SetCullLocal(true);
         }
 
         //Prvi sto
@@ -765,7 +767,7 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
         glUniform1f(glGetUniformLocation(shader, "uEmissive"), gAcOn ? 0.8f : 0.0f);
         R.DrawTexturedMesh(R.basin, Ml, lampTex, gAcOn ? ledOn : ledOff);
         glUniform1f(glGetUniformLocation(shader, "uEmissive"), 0.0f);
-        glDisable(GL_CULL_FACE);
+        SetCullLocal(false);
 
 
         //Ekrani
@@ -858,11 +860,11 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
         glm::vec3 iconPos = glm::vec3(center3.x, center3.y, center3.z + zOffset);
 
         DrawScreenQuad(iconPos, iconScale, icon, digitTint);
-        glEnable(GL_CULL_FACE);
+        SetCullLocal(true);
 
 
         //Lavor + Voda + Kapljice
-        glDisable(GL_CULL_FACE);
+        SetCullLocal(false);
         glDepthMask(GL_TRUE);
 
         R.DrawMeshTriangles(
@@ -892,7 +894,7 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
             glDepthMask(GL_TRUE);
         }
 
-        glEnable(GL_CULL_FACE);
+        SetCullLocal(true);
 
         for (auto &d : gDrops)
             if (d.alive)
@@ -926,7 +928,7 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
             Mr = glm::scale(Mr, glm::vec3(0.1f));
 
             glDisable(GL_DEPTH_TEST);
-            glDisable(GL_CULL_FACE);
+            SetCullLocal(false);
 
             R.DrawMeshTriangles(remoteMat0Mesh, Mr, glm::vec4(1,1,1,1), false);
             R.DrawMeshTriangles(remoteMat1Mesh, Mr, glm::vec4(1,1,1,1), false);
@@ -934,7 +936,7 @@ auto SetCullLocal = [&](bool wantCullForThisDraw)
             R.DrawTexturedMesh(remoteMat3Mesh, Mr, remoteTex8,  glm::vec4(1,1,1,1));
             R.DrawCenter();
 
-            glEnable(GL_CULL_FACE);
+            SetCullLocal(true);
             glEnable(GL_DEPTH_TEST);
         }
         else
