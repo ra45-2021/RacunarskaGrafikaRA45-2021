@@ -13,6 +13,8 @@
 #include "Header/Camera.h"
 #include "Header/MeshBuilders.h"
 #include "Header/Renderer.h"
+#include "Header/tiny_obj_loader.h"
+
 
 static void framebuffer_size_callback(GLFWwindow *, int width, int height)
 {
@@ -51,6 +53,155 @@ static float FacingDotToAC(const glm::vec3 &camPos, const glm::vec3 &camFront, c
     glm::vec3 toAc = glm::normalize(glm::vec3(acPos.x - camPos.x, 0.0f, acPos.z - camPos.z));
     return glm::dot(f, toAc);
 }
+
+static bool LoadObjToMeshGL(const char* objPath, Renderer& R, MeshGL& outMesh, const glm::vec4& color)
+{
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
+
+    std::string baseDir = std::string(objPath);
+    auto slash = baseDir.find_last_of("/\\");
+    baseDir = (slash == std::string::npos) ? "" : baseDir.substr(0, slash + 1);
+
+    bool ok = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, objPath, baseDir.c_str(), true);
+    if (!ok) return false;
+
+    std::vector<float> data;
+    data.reserve(12 * 200000);
+
+    auto pushV = [&](float px,float py,float pz, float u,float v, float nx,float ny,float nz)
+    {
+        data.push_back(px); data.push_back(py); data.push_back(pz);
+        data.push_back(color.r); data.push_back(color.g); data.push_back(color.b); data.push_back(color.a);
+        data.push_back(u); data.push_back(v);
+        data.push_back(nx); data.push_back(ny); data.push_back(nz);
+    };
+
+    for (const auto& s : shapes)
+    {
+        for (const auto& idx : s.mesh.indices)
+        {
+            float px = attrib.vertices[3 * idx.vertex_index + 0];
+            float py = attrib.vertices[3 * idx.vertex_index + 1];
+            float pz = attrib.vertices[3 * idx.vertex_index + 2];
+
+            float nx = 0, ny = 1, nz = 0;
+            if (idx.normal_index >= 0)
+            {
+                nx = attrib.normals[3 * idx.normal_index + 0];
+                ny = attrib.normals[3 * idx.normal_index + 1];
+                nz = attrib.normals[3 * idx.normal_index + 2];
+            }
+
+            float u = 0, v = 0;
+            if (idx.texcoord_index >= 0)
+            {
+                u = attrib.texcoords[2 * idx.texcoord_index + 0];
+                v = attrib.texcoords[2 * idx.texcoord_index + 1];
+            }
+
+            pushV(px, py, pz, u, v, nx, ny, nz);
+        }
+    }
+
+    R.CreateFromFloats(outMesh, data, false);
+    return true;
+}
+
+static bool LoadObjToFourMeshesByMtlName(
+    const char* objPath, Renderer& R,
+    MeshGL& out0, MeshGL& out1, MeshGL& out2, MeshGL& out3,
+    const glm::vec4& color,
+    const std::string& n0="mat0",
+    const std::string& n1="mat1",
+    const std::string& n2="mat2",
+    const std::string& n3="mat3")
+{
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
+
+    std::string baseDir = std::string(objPath);
+    auto slash = baseDir.find_last_of("/\\");
+    baseDir = (slash == std::string::npos) ? "" : baseDir.substr(0, slash + 1);
+
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, objPath, baseDir.c_str(), true))
+        return false;
+
+    int id0=-1,id1=-1,id2=-1,id3=-1;
+    for(int i=0;i<(int)materials.size();i++){
+        if(materials[i].name==n0) id0=i;
+        if(materials[i].name==n1) id1=i;
+        if(materials[i].name==n2) id2=i;
+        if(materials[i].name==n3) id3=i;
+    }
+
+    std::vector<float> d0,d1,d2,d3;
+    d0.reserve(12*50000); d1.reserve(12*50000);
+    d2.reserve(12*50000); d3.reserve(12*50000);
+
+    auto pushV = [&](std::vector<float>& data, float px,float py,float pz, float u,float v, float nx,float ny,float nz)
+    {
+        data.push_back(px); data.push_back(py); data.push_back(pz);
+        data.push_back(color.r); data.push_back(color.g); data.push_back(color.b); data.push_back(color.a);
+        data.push_back(u); data.push_back(v);
+        data.push_back(nx); data.push_back(ny); data.push_back(nz);
+    };
+
+    for (const auto& s : shapes)
+    {
+        size_t index_offset = 0;
+        for (size_t f = 0; f < s.mesh.num_face_vertices.size(); f++)
+        {
+            int fv = s.mesh.num_face_vertices[f];
+            int faceMat = (f < s.mesh.material_ids.size()) ? s.mesh.material_ids[f] : -1;
+
+            std::vector<float>* target = nullptr;
+            if      (faceMat == id0) target = &d0;
+            else if (faceMat == id1) target = &d1;
+            else if (faceMat == id2) target = &d2;
+            else if (faceMat == id3) target = &d3;
+            else { index_offset += fv; continue; }
+
+            for (int vtx = 0; vtx < fv; vtx++)
+            {
+                tinyobj::index_t idx = s.mesh.indices[index_offset + vtx];
+
+                float px = attrib.vertices[3 * idx.vertex_index + 0];
+                float py = attrib.vertices[3 * idx.vertex_index + 1];
+                float pz = attrib.vertices[3 * idx.vertex_index + 2];
+
+                float nx=0, ny=1, nz=0;
+                if (idx.normal_index >= 0){
+                    nx = attrib.normals[3 * idx.normal_index + 0];
+                    ny = attrib.normals[3 * idx.normal_index + 1];
+                    nz = attrib.normals[3 * idx.normal_index + 2];
+                }
+
+                float u=0, v=0;
+                if (idx.texcoord_index >= 0){
+                    u = attrib.texcoords[2 * idx.texcoord_index + 0];
+                    v = attrib.texcoords[2 * idx.texcoord_index + 1];
+                }
+
+                pushV(*target, px,py,pz, u,v, nx,ny,nz);
+            }
+            index_offset += fv;
+        }
+    }
+
+    bool ok=false;
+    if(!d0.empty()){ R.CreateFromFloats(out0, d0, false); ok=true; }
+    if(!d1.empty()){ R.CreateFromFloats(out1, d1, false); ok=true; }
+    if(!d2.empty()){ R.CreateFromFloats(out2, d2, false); ok=true; }
+    if(!d3.empty()){ R.CreateFromFloats(out3, d3, false); ok=true; }
+    return ok;
+}
+
+
 
 int main()
 {
@@ -105,7 +256,10 @@ int main()
 
     unsigned int overlayTex = loadImageToTexture("res/overlay.png");
     unsigned int wallTex = loadImageToTexture("res/wall.png");
+    unsigned int wall2Tex = loadImageToTexture("res/wall2.png");
     unsigned int floorTex = loadImageToTexture("res/floor.png");
+    unsigned int bathroomFloorTex = loadImageToTexture("res/bathroom-floor.png");
+    unsigned int bathroomWallTex = loadImageToTexture("res/bathroom-wall.png");
 
     unsigned int whiteTex;
     unsigned char px[4] = {255, 255, 255, 255};
@@ -127,6 +281,19 @@ int main()
     unsigned int snowTex = loadImageToTexture("res/snow.png");
     unsigned int okTex = loadImageToTexture("res/check.png");
     unsigned int minusTex = loadImageToTexture("res/minus.png");
+    unsigned int toiletTex = loadImageToTexture("res/toilet/Toilet.jpg");
+    unsigned int cupboardTex = loadImageToTexture("res/cupboard.png");
+    unsigned int remoteTex14 = loadImageToTexture("res/remote/blinn14SG_baseColor.png");
+    unsigned int remoteTex8  = loadImageToTexture("res/remote/blinn8SG_baseColor.png");
+
+    MeshGL toiletMesh;
+    MeshGL floorMatMesh;
+    MeshGL sinkMesh;
+    MeshGL remoteMat0Mesh, remoteMat1Mesh, remoteMat2Mesh, remoteMat3Mesh;
+    bool toiletOk = LoadObjToMeshGL("res/toilet/10778_Toilet_V2.obj", R, toiletMesh, glm::vec4(1,1,1,1));    
+    bool floorMatOk = LoadObjToMeshGL("res/mat/mat.obj", R, floorMatMesh, glm::vec4(0.467f, 0.553f, 0.6f, 1.0f));
+    bool sinkOk = LoadObjToMeshGL("res/sink/lavandino.obj", R, sinkMesh, glm::vec4(0.95f, 0.95f, 0.98f, 1.0f));
+    bool remoteOk = LoadObjToFourMeshesByMtlName("res/remote/ac_remote__free.obj", R, remoteMat0Mesh, remoteMat1Mesh, remoteMat2Mesh, remoteMat3Mesh, glm::vec4(1,1,1,1), "mat0","mat1","mat2","mat3");
 
     double lastTime = glfwGetTime();
     bool depthOn = true;
@@ -165,17 +332,22 @@ int main()
 
         // Kontrola dubine i odstranjanje naličja (D i C)
         bool dNow = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
-        if (dNow && !prevD)
-            depthOn = !depthOn;
+        if (dNow && !prevD) depthOn = !depthOn;
         prevD = dNow;
 
         bool cNow = glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
-        if (cNow && !prevC)
-            cullOn = !cullOn;
+        if (cNow && !prevC) cullOn = !cullOn;
         prevC = cNow;
 
         depthOn ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
-        cullOn ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+        cullOn  ? glEnable(GL_CULL_FACE)  : glDisable(GL_CULL_FACE);
+
+        auto SetCullLocal = [&](bool wantCullForThisDraw)
+        {
+            if (!cullOn) { glDisable(GL_CULL_FACE); return; } 
+            wantCullForThisDraw ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+        };
+
 
         // Kontrola mišem
         {
@@ -274,7 +446,35 @@ int main()
         int fbW, fbH;
         glfwGetFramebufferSize(window, &fbW, &fbH);
         R.SetCommonUniforms(gCamera.View(), gCamera.Projection((float)fbW / (float)fbH));
-        glUniform3f(glGetUniformLocation(shader, "uLightDir"), -0.4f, -1.0f, -0.2f);
+
+        glm::vec3 lightPos = glm::vec3(-0.5f, 4.5f, -1.0f);
+        glm::vec3 lightColor = glm::vec3(0.98f, 0.98f, 1.0f); 
+        float lightPower = 0.9f;  
+        float ambient = 0.75f;
+
+        glUniform3fv(glGetUniformLocation(shader, "uLightPos"), 1, glm::value_ptr(lightPos));
+        glUniform3fv(glGetUniformLocation(shader, "uLightColor"), 1, glm::value_ptr(lightColor));
+        glUniform1f(glGetUniformLocation(shader, "uLightPower"), lightPower);
+        glUniform1f(glGetUniformLocation(shader, "uAmbient"), ambient);
+        glUniform1f(glGetUniformLocation(shader, "uEmissive"), 0.0f);
+
+        glm::mat4 Mlight = glm::scale(glm::translate(glm::mat4(1.0f), lightPos), glm::vec3(0.12f));
+        glUniform1i(glGetUniformLocation(shader, "uUnlit"), 1);
+        glUniform1f(glGetUniformLocation(shader, "uEmissive"), 1.0f);
+        R.DrawMeshTriangles(R.dropletSphere, Mlight, glm::vec4(lightColor, 1.0f), false);
+
+        glUniform1f(glGetUniformLocation(shader, "uEmissive"), 0.0f);
+        glUniform1i(glGetUniformLocation(shader, "uUnlit"), 0);
+
+        glm::vec3 lightPos2   = gLedPos;                      
+        glm::vec3 lightColor2 = glm::vec3(1.0f, 0.12f, 0.08f);  
+        float lightPower2     = gAcOn ? 0.05f : 0.0f;         
+
+        glUniform3fv(glGetUniformLocation(shader, "uLightPos2"), 1, glm::value_ptr(lightPos2));
+        glUniform3fv(glGetUniformLocation(shader, "uLightColor2"), 1, glm::value_ptr(lightColor2));
+        glUniform1f (glGetUniformLocation(shader, "uLightPower2"), lightPower2);
+
+
 
         auto DrawBox = [&](const glm::vec3 &pos, const glm::vec3 &size, const glm::vec4 &col, float rotYdeg = 0.0f)
         {
@@ -287,7 +487,7 @@ int main()
 
         //------------------------------------------------Renderovanje------------------------------------------------
 
-        //Zid
+        //Zid 1
         glm::vec3 wallSize(19.0f, 13.0f, 0.1f);
         float acHalfDepth = 1.2f * 0.5f;
         float wallGap = 0.0f;
@@ -297,14 +497,49 @@ int main()
         Mwall = glm::rotate(Mwall, glm::radians(180.0f), glm::vec3(0, 0, 1));
         Mwall = glm::scale(Mwall, wallSize);
 
-        glDisable(GL_CULL_FACE);
+        SetCullLocal(false);
         R.DrawTexturedCube(Mwall, wallTex);
-        glEnable(GL_CULL_FACE);
+        SetCullLocal(true);
+
+        // Zid kupatila
+        glm::vec3 wall2Size(13.0f, 8.0f, 0.1f);
+        glm::vec3 wall2Pos(0.89f, 0.15f, 3.08f);
+  
+        glm::mat4 Mwall2 = glm::translate(glm::mat4(1.0f), wall2Pos);
+        Mwall2 = glm::rotate(Mwall2, glm::radians(270.0f), glm::vec3(0, 0, 1));
+        Mwall2 = glm::scale(Mwall2, wall2Size);
+
+        // Zid 2
+        glm::vec3 wallThin(0.1f, 13.0f, 20.0f); 
+
+        {
+            glm::vec3 pos = glm::vec3(1.7f, 0.15f, -1.13f);
+            glm::mat4 M = glm::translate(glm::mat4(1.0f), pos);
+            M = glm::scale(M, wallThin);
+            SetCullLocal(false);
+            R.DrawTexturedCube(M, wall2Tex);
+            R.DrawTexturedCube(Mwall2, bathroomWallTex);
+            SetCullLocal(true);
+        }
+
+        // Zid kupatila 2
+        {
+            glm::vec3 backWallSize(0.1f, 13.0f, 11.0f);  
+            glm::vec3 pos = glm::vec3(1.7f, 0.15f, 1.97f);
+
+            glm::mat4 M = glm::translate(glm::mat4(1.0f), pos);
+            M = glm::rotate(M, glm::radians(180.0f), glm::vec3(1, 0, 0));
+            M = glm::scale(M, backWallSize);
+
+            SetCullLocal(false);
+            R.DrawTexturedCube(M, bathroomWallTex);
+            SetCullLocal(true);
+        }
 
         //Pod
-        glm::vec3 floorSize(18.9f, 0.1f, 15.0f);
+        glm::vec3 floorSize(18.9f, 0.1f, 20.0f);
         float floorY = (gBasinOriginalPos.y - (gBasinHeight * 0.5f)) - (floorSize.y * 0.5f) - 0.02f;
-        glm::vec3 floorPos(-0.2f, floorY, -1.62f);
+        glm::vec3 floorPos(-0.2f, floorY, -1.12f);
 
         glm::mat4 Mfloor = glm::translate(glm::mat4(1.0f), floorPos);
         Mfloor = glm::rotate(Mfloor, glm::radians(180.0f), glm::vec3(0, 0, 1));
@@ -312,7 +547,80 @@ int main()
 
         R.DrawTexturedCube(Mfloor, floorTex);
 
+        // Pod kupatila
+        glm::vec3 floor2Size(8.0f, 0.1f, 11.0f);
+        glm::vec3 floor2Pos(0.89f, floorY, 1.98f);
+
+        glm::mat4 Mfloor2 = glm::translate(glm::mat4(1.0f), floor2Pos);
+        Mfloor2 = glm::rotate(Mfloor2, glm::radians(180.0f), glm::vec3(0, 0, 1));
+        Mfloor2 = glm::scale(Mfloor2, floor2Size);
+
+        R.DrawTexturedCube(Mfloor2, bathroomFloorTex);
+
+
         //------------------------------------------------Nameštaj------------------------------------------------
+
+        // WC Solja 
+        if (toiletOk)
+        {
+            glm::vec3 toiletPos = wall2Pos + glm::vec3(0.2f, -0.9f, -0.35f);
+
+            glm::mat4 Mt = glm::translate(glm::mat4(1.0f), toiletPos);
+            Mt = glm::rotate(Mt, glm::radians(270.0f), glm::vec3(1,0,0)); 
+            Mt = glm::rotate(Mt, glm::radians(180.0f), glm::vec3(0,0,1));
+            Mt = glm::scale(Mt, glm::vec3(0.02f));
+
+            R.DrawTexturedMesh(toiletMesh, Mt, toiletTex, glm::vec4(1.0f, 0.99f, 0.96f, 1.0f));
+
+        }
+
+        //Lavabo - Gornji Deo
+        if (sinkOk)
+        {
+            glm::vec3 sinkPos = wall2Pos + glm::vec3(-0.35f, -0.75f, -0.08f);
+
+            glm::mat4 Ms = glm::translate(glm::mat4(1.0f), sinkPos);
+
+            Ms = glm::rotate(Ms, glm::radians(90.0f), glm::vec3(0, 1, 0));
+            Ms = glm::scale(Ms, glm::vec3(0.00035f));
+
+            SetCullLocal(false);
+            R.DrawMeshTriangles(sinkMesh, Ms, glm::vec4(1.0f, 0.99f, 0.96f, 1.0f), false);
+            SetCullLocal(true);
+        }
+
+        // Lavabo - Donji Deo
+        {
+        
+            glm::vec3 basePos = wall2Pos + glm::vec3(-0.35f, -1.01f, -0.08f);
+            glm::vec3 baseSize = glm::vec3(2.45f, 2.69f, 0.78f);
+
+            glm::mat4 M = glm::translate(glm::mat4(1.0f), basePos);
+            M = glm::scale(M, baseSize);
+
+            glm::vec4 bodyCol(0.95f, 0.95f, 0.95f, 1.0f);
+
+            SetCullLocal(false);
+            R.DrawTexturedCubeFace(M, cupboardTex, bodyCol, glm::vec4(1,1,1,1), CubeFace::Back, 0.004f);
+            SetCullLocal(true);
+            
+        }
+
+        // Otirač
+        if (floorMatOk)
+        {
+            glm::vec3 matPos = glm::vec3(0.87f, -1.1f, 1.35f);
+            glm::mat4 Mm = glm::translate(glm::mat4(1.0f), matPos);
+
+            Mm = glm::rotate(Mm, glm::radians(90.0f), glm::vec3(1,0,0));
+            Mm = glm::rotate(Mm, glm::radians(180.0f), glm::vec3(0,1,0));
+
+            Mm = glm::scale(Mm, glm::vec3(0.01f));
+
+            SetCullLocal(false);
+            R.DrawMeshTriangles(floorMatMesh, Mm, glm::vec4(0.60f, 0.68f, 0.73f, 1.0f), false);
+            SetCullLocal(true);
+        }
 
         //Prvi sto
         glm::vec3 deskTopPos = glm::vec3(-1.305f, -0.60f, -0.65f);
@@ -451,12 +759,15 @@ int main()
 
 
         //Lampica
-        glm::mat4 Ml = glm::scale(
-            glm::rotate(glm::translate(glm::mat4(1.0f), gLedPos), glm::radians(90.0f), glm::vec3(1, 0, 0)),
-            glm::vec3(0.085f, 0.08f, 0.08f));
+        glm::mat4 Ml = glm::scale(glm::rotate(glm::translate(glm::mat4(1.0f), gLedPos), glm::radians(90.0f), glm::vec3(1, 0, 0)), glm::vec3(0.085f, 0.08f, 0.08f));
 
-        R.DrawTexturedMesh(R.basin, Ml, lampTex, gAcOn ? glm::vec4(0.141f, 0.8f, 0.263f, 1.0f) : glm::vec4(0.8787f, 0.204f, 0.051f, 1.0f));
-        glDisable(GL_CULL_FACE);
+        glm::vec4 ledOff = glm::vec4(0.18f, 0.18f, 0.18f, 1.0f);
+        glm::vec4 ledOn  = glm::vec4(0.95f, 0.12f, 0.08f, 1.0f);
+
+        glUniform1f(glGetUniformLocation(shader, "uEmissive"), gAcOn ? 0.8f : 0.0f);
+        R.DrawTexturedMesh(R.basin, Ml, lampTex, gAcOn ? ledOn : ledOff);
+        glUniform1f(glGetUniformLocation(shader, "uEmissive"), 0.0f);
+        SetCullLocal(false);
 
 
         //Ekrani
@@ -549,12 +860,11 @@ int main()
         glm::vec3 iconPos = glm::vec3(center3.x, center3.y, center3.z + zOffset);
 
         DrawScreenQuad(iconPos, iconScale, icon, digitTint);
-        glEnable(GL_CULL_FACE);
+        SetCullLocal(true);
 
 
         //Lavor + Voda + Kapljice
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_DEPTH_TEST);
+        SetCullLocal(false);
         glDepthMask(GL_TRUE);
 
         R.DrawMeshTriangles(
@@ -584,14 +894,56 @@ int main()
             glDepthMask(GL_TRUE);
         }
 
-        glEnable(GL_CULL_FACE);
+        SetCullLocal(true);
 
         for (auto &d : gDrops)
             if (d.alive)
                 R.DrawMeshTriangles(R.dropletSphere, glm::scale(glm::translate(glm::mat4(1.0f), d.pos), glm::vec3(0.02f)), glm::vec4(0.35f, 0.7f, 1, 1), true);
 
-        // R.DrawOverlay();
-        R.DrawCenter();
+        bool holdingBasin = (gBasinState == BasinState::InFrontFull || gBasinState == BasinState::InFrontEmpty);
+
+        if (!holdingBasin && remoteOk)
+        {
+            glm::vec3 front = glm::normalize(gCamera.front);
+            glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
+            glm::vec3 right = glm::normalize(glm::cross(worldUp, front)); 
+            glm::vec3 up    = glm::normalize(glm::cross(front, right));  
+
+            float dist = 0.95f;      
+            float xOff = 0.05f;      
+            float yOff = -0.25f;      
+
+            glm::vec3 pos = gCamera.pos + front * dist + right * xOff + up * yOff;
+
+            glm::mat4 basis(1.0f);
+            basis[0] = glm::vec4(right, 0.0f);
+            basis[1] = glm::vec4(up, 0.0f);
+            basis[2] = glm::vec4(-front, 0.0f);
+
+            glm::mat4 Mr = glm::translate(glm::mat4(1.0f), pos) * basis;
+            Mr = glm::rotate(Mr, glm::radians(-18.0f), glm::vec3(1,0,0));
+            Mr = glm::rotate(Mr, glm::radians(90.0f), glm::vec3(1,0,0));
+            Mr = glm::rotate(Mr, glm::radians(180.0f), glm::vec3(0,0,1));
+            Mr = glm::rotate(Mr, glm::radians(-90.0f), glm::vec3(0,1,0));
+            Mr = glm::scale(Mr, glm::vec3(0.1f));
+
+            glDisable(GL_DEPTH_TEST);
+            SetCullLocal(false);
+
+            R.DrawMeshTriangles(remoteMat0Mesh, Mr, glm::vec4(1,1,1,1), false);
+            R.DrawMeshTriangles(remoteMat1Mesh, Mr, glm::vec4(1,1,1,1), false);
+            R.DrawTexturedMesh(remoteMat2Mesh, Mr, remoteTex14, glm::vec4(1,1,1,1));
+            R.DrawTexturedMesh(remoteMat3Mesh, Mr, remoteTex8,  glm::vec4(1,1,1,1));
+            R.DrawCenter();
+
+            SetCullLocal(true);
+            glEnable(GL_DEPTH_TEST);
+        }
+        else
+        {
+            R.DrawCenter();
+        }
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();

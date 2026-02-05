@@ -12,6 +12,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Globals.cpp" "CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o" "gcc" "CMakeFiles/Kostur3D.dir/Source/Globals.cpp.o.d"
   "/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/MeshBuilders.cpp" "CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o" "gcc" "CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o.d"
   "/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/Renderer.cpp" "CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o" "gcc" "CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o.d"
+  "/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Source/tiny_obj_loader.cpp" "CMakeFiles/Kostur3D.dir/Source/tiny_obj_loader.cpp.o" "gcc" "CMakeFiles/Kostur3D.dir/Source/tiny_obj_loader.cpp.o.d"
   "/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Util.cpp" "CMakeFiles/Kostur3D.dir/Util.cpp.o" "gcc" "CMakeFiles/Kostur3D.dir/Util.cpp.o.d"
   "/Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/main.cpp" "CMakeFiles/Kostur3D.dir/main.cpp.o" "gcc" "CMakeFiles/Kostur3D.dir/main.cpp.o.d"
   )

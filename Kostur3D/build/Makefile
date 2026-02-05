@@ -225,6 +225,30 @@ Source/Renderer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.s
 .PHONY : Source/Renderer.cpp.s
 
+Source/tiny_obj_loader.o: Source/tiny_obj_loader.cpp.o
+.PHONY : Source/tiny_obj_loader.o
+
+# target to build an object file
+Source/tiny_obj_loader.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/tiny_obj_loader.cpp.o
+.PHONY : Source/tiny_obj_loader.cpp.o
+
+Source/tiny_obj_loader.i: Source/tiny_obj_loader.cpp.i
+.PHONY : Source/tiny_obj_loader.i
+
+# target to preprocess a source file
+Source/tiny_obj_loader.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/tiny_obj_loader.cpp.i
+.PHONY : Source/tiny_obj_loader.cpp.i
+
+Source/tiny_obj_loader.s: Source/tiny_obj_loader.cpp.s
+.PHONY : Source/tiny_obj_loader.s
+
+# target to generate assembly for a file
+Source/tiny_obj_loader.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Kostur3D.dir/build.make CMakeFiles/Kostur3D.dir/Source/tiny_obj_loader.cpp.s
+.PHONY : Source/tiny_obj_loader.cpp.s
+
 Util.o: Util.cpp.o
 .PHONY : Util.o
 
@@ -294,6 +318,9 @@ help:
 	@echo "... Source/Renderer.o"
 	@echo "... Source/Renderer.i"
 	@echo "... Source/Renderer.s"
+	@echo "... Source/tiny_obj_loader.o"
+	@echo "... Source/tiny_obj_loader.i"
+	@echo "... Source/tiny_obj_loader.s"
 	@echo "... Util.o"
 	@echo "... Util.i"
 	@echo "... Util.s"

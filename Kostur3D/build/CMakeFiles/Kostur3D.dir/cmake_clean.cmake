@@ -7,6 +7,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/Kostur3D.dir/Source/MeshBuilders.cpp.o.d"
   "CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o"
   "CMakeFiles/Kostur3D.dir/Source/Renderer.cpp.o.d"
+  "CMakeFiles/Kostur3D.dir/Source/tiny_obj_loader.cpp.o"
+  "CMakeFiles/Kostur3D.dir/Source/tiny_obj_loader.cpp.o.d"
   "CMakeFiles/Kostur3D.dir/Util.cpp.o"
   "CMakeFiles/Kostur3D.dir/Util.cpp.o.d"
   "CMakeFiles/Kostur3D.dir/main.cpp.o"
