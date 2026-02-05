@@ -1130,4 +1130,7 @@ CMakeFiles/Kostur3D.dir/main.cpp.o: \
   /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Header/Globals.h \
   /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Header/Camera.h \
   /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Header/MeshBuilders.h \
-  /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Header/Renderer.h
+  /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Header/Renderer.h \
+  /Users/Savic/Desktop/Grafika/RacunarskaGrafikaRA45-2021/Kostur3D/Header/tiny_obj_loader.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/map \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree

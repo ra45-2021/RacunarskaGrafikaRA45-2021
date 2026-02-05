@@ -11,15 +11,19 @@ uniform mat4 uP;
 
 out vec4 vColor;
 out vec2 vUV;
-out vec3 vN;    
+out vec3 vN;
+out vec3 vWorldPos;   // NOVO
 
 void main()
 {
     vColor = aColor;
     vUV = aUV;
 
+    vec4 world = uM * vec4(aPos, 1.0);   
+    vWorldPos = world.xyz;              
+
     mat3 Nmat = mat3(transpose(inverse(uM)));
     vN = normalize(Nmat * aNormal);
 
-    gl_Position = uP * uV * uM * vec4(aPos, 1.0);
+    gl_Position = uP * uV * world;   
 }

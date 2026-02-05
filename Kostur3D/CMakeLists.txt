@@ -7,13 +7,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(Kostur3D
     main.cpp
     Util.cpp
+    Source/tiny_obj_loader.cpp
     Source/Globals.cpp
     Source/Camera.cpp
     Source/MeshBuilders.cpp
     Source/Renderer.cpp
 )
-target_include_directories(Kostur3D PRIVATE .)
 
+target_include_directories(Kostur3D PRIVATE .)
 
 if(APPLE)
     if(EXISTS /opt/homebrew)
@@ -37,6 +38,7 @@ add_custom_command(TARGET Kostur3D POST_BUILD
         ${CMAKE_SOURCE_DIR}/basic.vert
         $<TARGET_FILE_DIR:Kostur3D>/basic.vert
 )
+
 add_custom_command(TARGET Kostur3D POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_SOURCE_DIR}/basic.frag
